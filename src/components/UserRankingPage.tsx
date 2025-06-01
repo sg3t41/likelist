@@ -283,7 +283,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
         if (selectedMainCategoryId === categoryId) {
           setIsMainCategoryView(false);
           setSelectedCategory("");
-          setSelectedCategoryId("");
+          setSelectedSubCategoryId("");
           setSelectedMainCategory("");
           setSelectedMainCategoryId("");
         }
@@ -317,9 +317,9 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
         }
         
         // 削除したカテゴリが選択されていた場合、選択を解除
-        if (selectedCategoryId === subcategoryId) {
+        if (selectedSubCategoryId === subcategoryId) {
           setSelectedCategory("");
-          setSelectedCategoryId("");
+          setSelectedSubCategoryId("");
           setIsMainCategoryView(false);
         }
       } else {
@@ -347,8 +347,25 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
         // ランキングを再取得
         if (isMainCategoryView && selectedMainCategoryId) {
           await fetchMainCategoryRankings(selectedMainCategoryId);
-        } else if (selectedCategoryId) {
-          await fetchRankings(selectedCategoryId);
+        } else if (selectedSubCategoryId) {
+          // 小カテゴリのランキングを再取得
+          const response = await fetch(`/api/rankings?subCategoryId=${selectedSubCategoryId}&userId=${pageUser.id}`);
+          if (response.ok) {
+            const items = await response.json();
+            const rankingMap: RankingMap = {};
+            items.forEach((item: any) => {
+              const position = item.position || Object.keys(rankingMap).length + 1;
+              rankingMap[position] = {
+                id: item.id,
+                title: item.title,
+                description: item.description
+              };
+            });
+            setRankings(prev => ({
+              ...prev,
+              [selectedCategory]: rankingMap
+            }));
+          }
         }
       } else {
         const errorData = await response.json();
@@ -387,8 +404,25 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
         // ランキングを再取得
         if (isMainCategoryView && selectedMainCategoryId) {
           await fetchMainCategoryRankings(selectedMainCategoryId);
-        } else if (selectedCategoryId) {
-          await fetchRankings(selectedCategoryId);
+        } else if (selectedSubCategoryId) {
+          // 小カテゴリのランキングを再取得
+          const response = await fetch(`/api/rankings?subCategoryId=${selectedSubCategoryId}&userId=${pageUser.id}`);
+          if (response.ok) {
+            const items = await response.json();
+            const rankingMap: RankingMap = {};
+            items.forEach((item: any) => {
+              const position = item.position || Object.keys(rankingMap).length + 1;
+              rankingMap[position] = {
+                id: item.id,
+                title: item.title,
+                description: item.description
+              };
+            });
+            setRankings(prev => ({
+              ...prev,
+              [selectedCategory]: rankingMap
+            }));
+          }
         }
       }
     } catch (error) {
@@ -436,8 +470,25 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
         // ランキングを再取得
         if (isMainCategoryView && selectedMainCategoryId) {
           await fetchMainCategoryRankings(selectedMainCategoryId);
-        } else if (selectedCategoryId) {
-          await fetchRankings(selectedCategoryId);
+        } else if (selectedSubCategoryId) {
+          // 小カテゴリのランキングを再取得
+          const response = await fetch(`/api/rankings?subCategoryId=${selectedSubCategoryId}&userId=${pageUser.id}`);
+          if (response.ok) {
+            const items = await response.json();
+            const rankingMap: RankingMap = {};
+            items.forEach((item: any) => {
+              const position = item.position || Object.keys(rankingMap).length + 1;
+              rankingMap[position] = {
+                id: item.id,
+                title: item.title,
+                description: item.description
+              };
+            });
+            setRankings(prev => ({
+              ...prev,
+              [selectedCategory]: rankingMap
+            }));
+          }
         }
       }
     } catch (error) {
