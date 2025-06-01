@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: false // localhostではfalse
+        secure: process.env.NODE_ENV === 'production'
       }
     },
   },
@@ -42,21 +42,37 @@ export const authOptions: NextAuthOptions = {
             return false;
           }
 
-          await prisma.user.upsert({
-            where: { username },
-            update: {
-              name: user.name,
-              email: user.email,
-              image: user.image,
-            },
-            create: {
-              username,
-              name: user.name,
-              email: user.email,
-              image: user.image,
-            },
-          });
-          return true;
+          // Prisma接続を確実にするため、リトライロジックを追加
+          let retries = 3;
+          while (retries > 0) {
+            try {
+              await prisma.user.upsert({
+                where: { username },
+                update: {
+                  name: user.name,
+                  email: user.email,
+                  image: user.image,
+                },
+                create: {
+                  username,
+                  name: user.name,
+                  email: user.email,
+                  image: user.image,
+                },
+              });
+              return true;
+            } catch (dbError: any) {
+              retries--;
+              console.error(`Database error (retries left: ${retries}):`, dbError);
+              
+              if (retries === 0) {
+                throw dbError;
+              }
+              
+              // 短い待機時間を設定
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }
         } catch (error) {
           console.error("Error saving user:", error);
           return false;
