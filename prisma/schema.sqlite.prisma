@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  name          String?
+  image         String?
+  username      String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  mainCategories    MainCategory[]
+  subCategories     SubCategory[]
+  rankingItems      RankingItem[]
+}
+
+model MainCategory {
+  id            String    @id @default(cuid())
+  name          String
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPublic      Boolean   @default(true)  // 公開設定
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  subCategories SubCategory[]
+  rankingItems  RankingItem[]  // 直接作成された項目
+  itemReferences MainCategoryItemReference[]  // 小カテゴリから参照している項目
+  
+  @@unique([name, userId])
+}
+
+model SubCategory {
+  id              String    @id @default(cuid())
+  name            String
+  mainCategoryId  String
+  mainCategory    MainCategory @relation(fields: [mainCategoryId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPublic        Boolean   @default(true)  // 公開設定
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  rankingItems    RankingItem[]
+  
+  @@unique([name, mainCategoryId])
+}
+
+model RankingItem {
+  id              String    @id @default(cuid())
+  title           String
+  description     String?
+  position        Int?      // 順位を保持（小カテゴリでの順位）
+  subCategoryId   String?
+  subCategory     SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+  mainCategoryId  String?   // 直接大カテゴリに作成された項目用
+  mainCategory    MainCategory? @relation(fields: [mainCategoryId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  mainCategoryReferences MainCategoryItemReference[]
+}
+
+model MainCategoryItemReference {
+  id              String    @id @default(cuid())
+  mainCategoryId  String
+  mainCategory    MainCategory @relation(fields: [mainCategoryId], references: [id], onDelete: Cascade)
+  rankingItemId   String
+  rankingItem     RankingItem @relation(fields: [rankingItemId], references: [id], onDelete: Cascade)
+  position        Int?      // 大カテゴリでの順位
+  createdAt       DateTime  @default(now())
+  
+  @@unique([mainCategoryId, rankingItemId])
+}

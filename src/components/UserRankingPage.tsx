@@ -260,6 +260,180 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
     fetchCategories();
   }, [pageUser.id]);
 
+  // 削除関数
+  const handleDeleteMainCategory = async (categoryId: string) => {
+    if (!confirm("この大カテゴリとそのすべての小カテゴリ、項目を削除しますか？")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/categories/${categoryId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // カテゴリリストを再取得
+        const res = await fetch(`/api/categories?userId=${pageUser.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setAllCategories(data.userCategories || []);
+        }
+        
+        // 削除したカテゴリが選択されていた場合、選択を解除
+        if (selectedMainCategoryId === categoryId) {
+          setIsMainCategoryView(false);
+          setSelectedCategory("");
+          setSelectedCategoryId("");
+          setSelectedMainCategory("");
+          setSelectedMainCategoryId("");
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting main category:", error);
+      alert("削除に失敗しました");
+    }
+  };
+
+  const handleDeleteSubCategory = async (subcategoryId: string) => {
+    if (!confirm("この小カテゴリとそのすべての項目を削除しますか？")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/subcategories/${subcategoryId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // カテゴリリストを再取得
+        const res = await fetch(`/api/categories?userId=${pageUser.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setAllCategories(data.userCategories || []);
+        }
+        
+        // 削除したカテゴリが選択されていた場合、選択を解除
+        if (selectedCategoryId === subcategoryId) {
+          setSelectedCategory("");
+          setSelectedCategoryId("");
+          setIsMainCategoryView(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting sub category:", error);
+      alert("削除に失敗しました");
+    }
+  };
+
+  const handleDeleteRankingItem = async (itemId: string) => {
+    if (!confirm("この項目を削除しますか？")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/rankings/${itemId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // ランキングを再取得
+        if (isMainCategoryView && selectedMainCategoryId) {
+          await fetchMainCategoryRankings(selectedMainCategoryId);
+        } else if (selectedCategoryId) {
+          await fetchRankings(selectedCategoryId);
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting ranking item:", error);
+      alert("削除に失敗しました");
+    }
+  };
+
+  const handlePositionChange = async (item: RankingItem, newPosition: number) => {
+    if (newPosition < 1 || newPosition > 11) {
+      alert("順位は1から11の間で指定してください");
+      return;
+    }
+
+    try {
+      const endpoint = isMainCategoryView && item.referenceId 
+        ? `/api/rankings/main-category/${item.referenceId}`
+        : `/api/rankings/${item.id}`;
+
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          position: newPosition,
+          ...(isMainCategoryView && { mainCategoryId: selectedMainCategoryId })
+        }),
+      });
+
+      if (response.ok) {
+        // ランキングを再取得
+        if (isMainCategoryView && selectedMainCategoryId) {
+          await fetchMainCategoryRankings(selectedMainCategoryId);
+        } else if (selectedCategoryId) {
+          await fetchRankings(selectedCategoryId);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating position:", error);
+      alert("順位の変更に失敗しました");
+    }
+  };
+
+  const handleEditItem = async (id: string, title: string, description: string, position?: number) => {
+    try {
+      // 編集対象のアイテムを探す
+      const currentRankings = isMainCategoryView 
+        ? rankings[`main_${selectedMainCategoryId}`] || {}
+        : rankings[selectedCategory] || {};
+      
+      let targetItem: RankingItem | null = null;
+      for (const pos in currentRankings) {
+        if (currentRankings[pos].id === id) {
+          targetItem = currentRankings[pos];
+          break;
+        }
+      }
+
+      if (!targetItem) return;
+
+      // タイトルと説明を更新
+      const endpoint = isMainCategoryView && targetItem.referenceId 
+        ? `/api/rankings/main-category/${targetItem.referenceId}`
+        : `/api/rankings/${id}`;
+
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          position,
+          ...(isMainCategoryView && { mainCategoryId: selectedMainCategoryId })
+        }),
+      });
+
+      if (response.ok) {
+        // ランキングを再取得
+        if (isMainCategoryView && selectedMainCategoryId) {
+          await fetchMainCategoryRankings(selectedMainCategoryId);
+        } else if (selectedCategoryId) {
+          await fetchRankings(selectedCategoryId);
+        }
+      }
+    } catch (error) {
+      console.error("Error editing item:", error);
+      alert("編集に失敗しました");
+    }
+  };
+
   // URLパラメータから初期状態を復元
   useEffect(() => {
     if (!isInitialized && allCategories.length > 0) {
@@ -530,6 +704,20 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                       >
                         {subCat.name}
                       </button>
+                      {isOwner && (
+                        <button
+                          onClick={() => {
+                            handleDeleteSubCategory(subCat.id);
+                            setIsMenuOpen(false);
+                          }}
+                          className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                          title="小カテゴリを削除"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -601,6 +789,20 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                       >
                         {subCat.name}
                       </button>
+                      {isOwner && (
+                        <button
+                          onClick={() => {
+                            handleDeleteSubCategory(subCat.id);
+                            setIsMenuOpen(false);
+                          }}
+                          className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                          title="小カテゴリを削除"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -710,6 +912,23 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                             </svg>
                             Xで共有
                           </button>
+                          {isOwner && isMainCategoryView && selectedMainCategoryId && (
+                            <>
+                              <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                              <button
+                                onClick={() => {
+                                  handleDeleteMainCategory(selectedMainCategoryId);
+                                  setIsRankingMenuOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                この大カテゴリを削除
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     )}
@@ -794,19 +1013,33 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-50 border border-gray-200 dark:border-gray-700">
                               <div className="py-1">
                                 {isOwner && (
-                                  <button
-                                    onClick={() => {
-                                      setSelectedItemForEdit(item);
-                                      setIsEditRankingItemModalOpen(true);
-                                      setOpenItemMenuId(null);
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                    編集
-                                  </button>
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedItemForEdit(item);
+                                        setIsEditRankingItemModalOpen(true);
+                                        setOpenItemMenuId(null);
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                      </svg>
+                                      編集
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        handleDeleteRankingItem(item.id);
+                                        setOpenItemMenuId(null);
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                      削除
+                                    </button>
+                                  </>
                                 )}
                                 <button
                                   onClick={() => {
@@ -992,35 +1225,8 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
           isOpen={isEditRankingItemModalOpen}
           onClose={() => setIsEditRankingItemModalOpen(false)}
           item={selectedItemForEdit}
-          onUpdate={async () => {
-            // ランキングアイテム更新後の処理
-            if (isMainCategoryView) {
-              fetchMainCategoryRankings(selectedMainCategoryId);
-            } else {
-              // 小カテゴリのランキングを再取得
-              try {
-                const response = await fetch(`/api/rankings?subCategoryId=${selectedSubCategoryId}&userId=${pageUser.id}`);
-                if (response.ok) {
-                  const items = await response.json();
-                  const rankingMap: RankingMap = {};
-                  items.forEach((item: any) => {
-                    const position = item.position || Object.keys(rankingMap).length + 1;
-                    rankingMap[position] = {
-                      id: item.id,
-                      title: item.title,
-                      description: item.description
-                    };
-                  });
-                  setRankings(prev => ({
-                    ...prev,
-                    [selectedCategory]: rankingMap
-                  }));
-                }
-              } catch (error) {
-                console.error("Error refreshing rankings:", error);
-              }
-            }
-          }}
+          totalItems={Object.keys(isMainCategoryView ? rankings[`main_${selectedMainCategoryId}`] || {} : rankings[selectedCategory] || {}).length}
+          onSave={handleEditItem}
         />
       )}
     </div>

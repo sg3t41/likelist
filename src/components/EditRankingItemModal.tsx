@@ -99,7 +99,7 @@ export default function EditRankingItemModal({
               onChange={(e) => setTargetPosition(Number(e.target.value))}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
-              {Array.from({ length: Math.min(totalItems, 11) }, (_, i) => (
+              {Array.from({ length: 11 }, (_, i) => (
                 <option key={i + 1} value={i + 1}>
                   {i + 1}位
                 </option>
