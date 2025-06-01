@@ -735,9 +735,15 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
             {allCategories.map((mainCat) => (
               <div key={mainCat.id} className="mb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  <button
+                    onClick={() => {
+                      handleMainCategorySelect(mainCat);
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-lg font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  >
                     {mainCat.name}
-                  </h3>
+                  </button>
                   {isOwner && (
                     <button
                       onClick={() => {
