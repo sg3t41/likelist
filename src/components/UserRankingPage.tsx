@@ -287,6 +287,10 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
           setSelectedMainCategory("");
           setSelectedMainCategoryId("");
         }
+      } else {
+        const errorData = await response.json();
+        console.error("Delete failed:", response.status, errorData);
+        alert(`削除に失敗しました: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Error deleting main category:", error);
@@ -318,6 +322,10 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
           setSelectedCategoryId("");
           setIsMainCategoryView(false);
         }
+      } else {
+        const errorData = await response.json();
+        console.error("Delete failed:", response.status, errorData);
+        alert(`削除に失敗しました: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Error deleting sub category:", error);
@@ -342,6 +350,10 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
         } else if (selectedCategoryId) {
           await fetchRankings(selectedCategoryId);
         }
+      } else {
+        const errorData = await response.json();
+        console.error("Delete failed:", response.status, errorData);
+        alert(`削除に失敗しました: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Error deleting ranking item:", error);
