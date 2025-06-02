@@ -72,6 +72,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
   const [highlightPosition, setHighlightPosition] = useState<number | null>(null);
   const [copiedRanking, setCopiedRanking] = useState(false);
   const [sharedRanking, setSharedRanking] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editingTitle, setEditingTitle] = useState("");
   const [isRankingMenuOpen, setIsRankingMenuOpen] = useState(false);
@@ -181,7 +182,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
       ? `${userName}さんの【${selectedMainCategory}】` 
       : `${userName}さんの【${selectedMainCategory} - ${selectedCategory}】`;
     
-    const tweetText = `${categoryText} ${position}位は「${item.title}」${item.description ? '\n' + item.description : ''}\n\n`;
+    const tweetText = `${categoryText}の好きなもの ${position}位は「${item.title}」${item.description ? '\n' + item.description : ''}\n\n`;
     
     // X(Twitter)の共有URLを作成
     const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`;
@@ -215,8 +216,8 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
     // ツイート内容を作成
     const userName = pageUser.name || pageUser.username || 'ユーザー';
     const categoryText = isMainCategoryView 
-      ? `${userName}さんの【${selectedMainCategory}】のランキング` 
-      : `${userName}さんの【${selectedMainCategory} - ${selectedCategory}】のランキング`;
+      ? `${userName}さんの【${selectedMainCategory}】の好きなものリスト` 
+      : `${userName}さんの【${selectedMainCategory} - ${selectedCategory}】の好きなものリスト`;
     
     const currentRankings = isMainCategoryView 
       ? rankings[`main_${selectedMainCategoryId}`] || {}
@@ -251,6 +252,9 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
         if (response.ok) {
           const data = await response.json();
           setAllCategories(data.userCategories || []);
+          // 全カテゴリを展開状態にする
+          const allCategoryIds = new Set((data.userCategories || []).map((cat: any) => cat.id));
+          setExpandedCategories(allCategoryIds);
         }
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -616,7 +620,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                   <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <span>{pageUser.name || `@${pageUser.username}`} の</span>
                     <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent font-extrabold" style={{ fontFamily: 'var(--font-fredoka)' }}>
-                      ランキング11
+                      好きなものリスト
                     </span>
                   </h1>
                   {pageUser.name && (
@@ -654,7 +658,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                         }}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
-                        マイランキング
+                        マイリスト
                       </button>
                       <button
                         onClick={() => signOut()}
@@ -704,7 +708,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                       setIsAddCategoryModalOpen(true);
                       setIsMenuOpen(false);
                     }}
-                    className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md"
+                    className="p-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg shadow-sm hover:shadow-md transition-all"
                     title="大カテゴリを追加"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -733,17 +737,46 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
               </div>
             </div>
             {allCategories.map((mainCat) => (
-              <div key={mainCat.id} className="mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <button
-                    onClick={() => {
-                      handleMainCategorySelect(mainCat);
-                      setIsMenuOpen(false);
-                    }}
-                    className="text-lg font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  >
-                    {mainCat.name}
-                  </button>
+              <div key={mainCat.id} className="mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center flex-1">
+                    <button
+                      onClick={() => {
+                        setExpandedCategories(prev => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(mainCat.id)) {
+                            newSet.delete(mainCat.id);
+                          } else {
+                            newSet.add(mainCat.id);
+                          }
+                          return newSet;
+                        });
+                      }}
+                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                    >
+                      <svg 
+                        className={`w-4 h-4 text-gray-500 transform transition-transform ${expandedCategories.has(mainCat.id) ? 'rotate-90' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleMainCategorySelect(mainCat);
+                        setIsMenuOpen(false);
+                      }}
+                      className={`flex-1 text-left text-lg font-semibold transition-colors px-4 py-2 rounded-md ${
+                        isMainCategoryView && selectedMainCategoryId === mainCat.id
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                      }`}
+                    >
+                      {mainCat.name}
+                    </button>
+                  </div>
                   {isOwner && (
                     <button
                       onClick={() => {
@@ -751,7 +784,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                         setIsAddSubCategoryModalOpen(true);
                         setIsMenuOpen(false);
                       }}
-                      className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                      className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-all"
                       title="小カテゴリを追加"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -760,36 +793,28 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                     </button>
                   )}
                 </div>
-                <div className="space-y-2">
-                  {mainCat.subCategories.map((subCat: any) => (
-                    <div key={subCat.id} className="group flex items-center">
-                      <button
-                        onClick={() => handleCategorySelect(mainCat.name, subCat.name, subCat.id)}
-                        className={`flex-1 text-left px-4 py-2 rounded-md transition-colors ${
-                          selectedCategory === subCat.name
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                        }`}
-                      >
-                        {subCat.name}
-                      </button>
-                      {isOwner && (
+                {expandedCategories.has(mainCat.id) && (
+                  <div className="ml-5 mt-2 space-y-1">
+                    {mainCat.subCategories.map((subCat: any) => (
+                      <div key={subCat.id} className="flex items-center">
+                        <span className="mr-2 text-gray-400">└</span>
                         <button
                           onClick={() => {
-                            handleDeleteSubCategory(subCat.id);
+                            handleCategorySelect(mainCat.name, subCat.name, subCat.id);
                             setIsMenuOpen(false);
                           }}
-                          className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                          title="小カテゴリを削除"
+                          className={`flex-1 text-left px-4 py-2 rounded-md transition-colors ${
+                            selectedCategory === subCat.name
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                          }`}
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
+                          {subCat.name}
                         </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -807,7 +832,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
               {isOwner && (
                 <button
                   onClick={() => setIsAddCategoryModalOpen(true)}
-                  className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md"
+                  className="p-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg shadow-sm hover:shadow-md transition-all"
                   title="大カテゴリを追加"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -818,25 +843,50 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
             </div>
             
             {allCategories.map((mainCat) => (
-              <div key={mainCat.id} className="mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <button
-                    onClick={() => handleMainCategorySelect(mainCat)}
-                    className={`text-lg font-semibold transition-colors ${
-                      isMainCategoryView && selectedMainCategoryId === mainCat.id
-                        ? "text-blue-600 dark:text-blue-400"
-                        : "text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
-                    }`}
-                  >
-                    {mainCat.name}
-                  </button>
+              <div key={mainCat.id} className="mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center flex-1">
+                    <button
+                      onClick={() => {
+                        setExpandedCategories(prev => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(mainCat.id)) {
+                            newSet.delete(mainCat.id);
+                          } else {
+                            newSet.add(mainCat.id);
+                          }
+                          return newSet;
+                        });
+                      }}
+                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                    >
+                      <svg 
+                        className={`w-4 h-4 text-gray-500 transform transition-transform ${expandedCategories.has(mainCat.id) ? 'rotate-90' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleMainCategorySelect(mainCat)}
+                      className={`flex-1 text-left text-lg font-semibold transition-colors px-4 py-2 rounded-md ${
+                        isMainCategoryView && selectedMainCategoryId === mainCat.id
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                      }`}
+                    >
+                      {mainCat.name}
+                    </button>
+                  </div>
                   {isOwner && (
                     <button
                       onClick={() => {
                         setSelectedMainCategoryForAdd(mainCat);
                         setIsAddSubCategoryModalOpen(true);
                       }}
-                      className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                      className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-all"
                       title="小カテゴリを追加"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -845,36 +895,25 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                     </button>
                   )}
                 </div>
-                <div className="space-y-2">
-                  {mainCat.subCategories.map((subCat: any) => (
-                    <div key={subCat.id} className="group flex items-center">
-                      <button
-                        onClick={() => handleCategorySelect(mainCat.name, subCat.name, subCat.id)}
-                        className={`flex-1 text-left px-4 py-2 rounded-md transition-colors ${
-                          selectedCategory === subCat.name
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                        }`}
-                      >
-                        {subCat.name}
-                      </button>
-                      {isOwner && (
+                {expandedCategories.has(mainCat.id) && (
+                  <div className="ml-5 mt-2 space-y-1">
+                    {mainCat.subCategories.map((subCat: any) => (
+                      <div key={subCat.id} className="flex items-center">
+                        <span className="mr-2 text-gray-400">└</span>
                         <button
-                          onClick={() => {
-                            handleDeleteSubCategory(subCat.id);
-                            setIsMenuOpen(false);
-                          }}
-                          className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                          title="小カテゴリを削除"
+                          onClick={() => handleCategorySelect(mainCat.name, subCat.name, subCat.id)}
+                          className={`flex-1 text-left px-4 py-2 rounded-md transition-colors ${
+                            selectedCategory === subCat.name
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                          }`}
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
+                          {subCat.name}
                         </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -886,7 +925,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                   カテゴリを選択してください
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400">
-                  左のサイドバーからカテゴリを選択すると、ランキングが表示されます。
+                  左のサイドバーからカテゴリを選択すると、好きなものリストが表示されます。
                 </p>
               </div>
             ) : (
@@ -929,7 +968,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                     </div>
                   ) : (
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      {isMainCategoryView ? `${selectedMainCategory}（総合）` : selectedCategory}ランキング
+                      {isMainCategoryView ? selectedMainCategory : selectedCategory}
                     </h2>
                   )}
                   <div className="relative ranking-menu-container">
@@ -981,23 +1020,6 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                             </svg>
                             Xで共有
                           </button>
-                          {isOwner && isMainCategoryView && selectedMainCategoryId && (
-                            <>
-                              <div className="border-t border-gray-200 dark:border-gray-700"></div>
-                              <button
-                                onClick={() => {
-                                  handleDeleteMainCategory(selectedMainCategoryId);
-                                  setIsRankingMenuOpen(false);
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                この大カテゴリを削除
-                              </button>
-                            </>
-                          )}
                         </div>
                       </div>
                     )}
@@ -1134,7 +1156,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                             setTargetPosition(index + 1);
                             setIsAddRankingItemModalOpen(true);
                           }}
-                          className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md ml-2"
+                          className="p-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg shadow-sm hover:shadow-md transition-all ml-2"
                           title={`${index + 1}位に項目を追加`}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
