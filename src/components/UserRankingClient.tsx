@@ -114,6 +114,11 @@ export default function UserRankingClient({
   const [editingTitle, setEditingTitle] = useState("");
   const [isRankingMenuOpen, setIsRankingMenuOpen] = useState(false);
   const [openItemMenuId, setOpenItemMenuId] = useState<string | null>(null);
+  const [draggedItem, setDraggedItem] = useState<{ item: RankingItem; position: number } | null>(null);
+  const [dragOverPosition, setDragOverPosition] = useState<number | null>(null);
+  const [touchDragElement, setTouchDragElement] = useState<HTMLElement | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number>(0);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
 
   const updateURL = (params: Record<string, string>) => {
     const newParams = new URLSearchParams();
@@ -518,6 +523,120 @@ export default function UserRankingClient({
     }
   };
 
+  // ドラッグ&ドロップのハンドラー
+  const handleDragStart = (e: React.DragEvent, item: RankingItem, position: number) => {
+    setDraggedItem({ item, position });
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, position: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverPosition(position);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverPosition(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, dropPosition: number) => {
+    e.preventDefault();
+    setDragOverPosition(null);
+
+    if (!draggedItem || draggedItem.position === dropPosition) {
+      setDraggedItem(null);
+      return;
+    }
+
+    // 順位を入れ替える
+    await handlePositionChange(draggedItem.item, dropPosition);
+    setDraggedItem(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+    setDragOverPosition(null);
+  };
+
+  // タッチイベントのハンドラー
+  const handleTouchStart = (e: React.TouchEvent, item: RankingItem, position: number) => {
+    const touch = e.touches[0];
+    setTouchStartY(touch.clientY);
+    
+    // 長押しでドラッグ開始
+    const timer = setTimeout(() => {
+      setDraggedItem({ item, position });
+      
+      // ドラッグ中の要素を作成
+      const element = e.currentTarget as HTMLElement;
+      const clone = element.cloneNode(true) as HTMLElement;
+      clone.style.position = 'fixed';
+      clone.style.top = `${touch.clientY - 40}px`;
+      clone.style.left = '10px';
+      clone.style.right = '10px';
+      clone.style.zIndex = '1000';
+      clone.style.opacity = '0.8';
+      clone.style.pointerEvents = 'none';
+      clone.classList.add('shadow-lg');
+      document.body.appendChild(clone);
+      setTouchDragElement(clone);
+      
+      // 振動フィードバック（対応デバイスのみ）
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
+    }, 300); // 300ms長押し
+    
+    setLongPressTimer(timer);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    
+    // 長押し中でない場合はスクロールを許可
+    if (!draggedItem) {
+      if (longPressTimer && Math.abs(touch.clientY - touchStartY) > 10) {
+        clearTimeout(longPressTimer);
+        setLongPressTimer(null);
+      }
+      return;
+    }
+    
+    // ドラッグ要素を移動
+    if (touchDragElement) {
+      touchDragElement.style.top = `${touch.clientY - 40}px`;
+      
+      // タッチ位置の要素を取得
+      const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (elementBelow) {
+        const rankingItem = elementBelow.closest('[id^="ranking-item-"]');
+        if (rankingItem) {
+          const position = parseInt(rankingItem.id.split('-')[2]);
+          setDragOverPosition(position);
+        }
+      }
+    }
+  };
+
+  const handleTouchEnd = async (e: React.TouchEvent) => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+    
+    if (touchDragElement) {
+      document.body.removeChild(touchDragElement);
+      setTouchDragElement(null);
+    }
+    
+    if (draggedItem && dragOverPosition && draggedItem.position !== dragOverPosition) {
+      await handlePositionChange(draggedItem.item, dragOverPosition);
+    }
+    
+    setDraggedItem(null);
+    setDragOverPosition(null);
+  };
+
   // 初期ハイライトのタイマー処理
   useEffect(() => {
     if (highlightPosition) {
@@ -552,6 +671,34 @@ export default function UserRankingClient({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isRankingMenuOpen, openItemMenuId]);
+
+  // タッチドラッグのクリーンアップ
+  useEffect(() => {
+    return () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+      }
+      if (touchDragElement && document.body.contains(touchDragElement)) {
+        document.body.removeChild(touchDragElement);
+      }
+    };
+  }, []);
+
+  // ドラッグ中のタッチムーブイベントでスクロール防止
+  useEffect(() => {
+    const preventScroll = (e: TouchEvent) => {
+      if (draggedItem) {
+        e.preventDefault();
+      }
+    };
+
+    // non-passiveリスナーとして登録
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchmove', preventScroll);
+    };
+  }, [draggedItem]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -923,8 +1070,23 @@ export default function UserRankingClient({
                       className={`px-6 py-4 flex items-center justify-between transition-all duration-300 ${
                         highlightPosition === index + 1
                           ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-inset ring-blue-500 dark:ring-blue-400'
+                          : dragOverPosition === position
+                          ? 'bg-gray-100 dark:bg-gray-700 border-2 border-dashed border-blue-500'
                           : ''
+                      } ${item && isOwner ? 'cursor-move touch-none' : ''} ${
+                        draggedItem?.position === position ? 'opacity-50' : ''
+                      } ${
+                        draggedItem && !touchDragElement && draggedItem.position === position ? 'scale-105' : ''
                       }`}
+                      draggable={!!(item && isOwner)}
+                      onDragStart={(e) => item && handleDragStart(e, item, position)}
+                      onDragOver={(e) => handleDragOver(e, position)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, position)}
+                      onDragEnd={handleDragEnd}
+                      onTouchStart={(e) => item && isOwner && handleTouchStart(e, item, position)}
+                      onTouchMove={(e) => item && isOwner && handleTouchMove(e)}
+                      onTouchEnd={(e) => item && isOwner && handleTouchEnd(e)}
                     >
                       <div className="flex items-center space-x-4 flex-1">
                         <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">

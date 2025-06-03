@@ -29,6 +29,18 @@ export default async function UserPage({ params, searchParams }: PageProps) {
 
   // 現在のログインユーザー情報を取得
   const currentUser = await getCurrentUser();
+  
+  // セッションのユーザーIDが存在しない場合の処理
+  if (currentUser && currentUser.userId) {
+    const sessionUser = await prisma.user.findUnique({
+      where: { id: currentUser.userId }
+    });
+    
+    if (!sessionUser) {
+      // セッションのユーザーがDBに存在しない場合は、セッションを無効として扱う
+      return notFound();
+    }
+  }
 
   // カテゴリー情報を取得
   const categories = await prisma.mainCategory.findMany({
