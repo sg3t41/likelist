@@ -13,11 +13,16 @@ export const authOptions: NextAuthOptions = {
       version: "2.0",
       authorization: {
         params: {
-          scope: "users.read tweet.read",
+          scope: "users.read tweet.read offline.access",
         },
       },
     }),
   ],
+  session: {
+    strategy: "jwt",
+    maxAge: 90 * 24 * 60 * 60, // 90日間
+    updateAge: 24 * 60 * 60, // 24時間ごとに更新
+  },
   cookies: {
     sessionToken: {
       name: `next-auth.session-token`,
@@ -25,7 +30,8 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production'
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 90 * 24 * 60 * 60 // 90日間
       }
     },
   },
@@ -87,6 +93,9 @@ export const authOptions: NextAuthOptions = {
         const username = twitterProfile.data?.username || twitterProfile.username;
         
         token.username = username;
+        token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
+        token.accessTokenExpires = account.expires_at ? account.expires_at * 1000 : Date.now() + 2 * 60 * 60 * 1000; // 2時間後
         
         if (username) {
           const dbUser = await prisma.user.findUnique({
@@ -106,6 +115,15 @@ export const authOptions: NextAuthOptions = {
           token.userId = dbUser.id;
         }
       }
+      
+      // Return previous token if the access token has not expired yet
+      if (Date.now() < (token.accessTokenExpires as number)) {
+        return token;
+      }
+      
+      // Access token has expired, try to update it
+      // Note: Twitter doesn't support refresh tokens in the same way as other providers
+      // The user will need to re-authenticate when the token expires
       return token;
     },
     async session({ session, token }) {
