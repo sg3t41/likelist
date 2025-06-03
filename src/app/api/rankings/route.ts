@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      // 参照アイテム
+      // 参照アイテム（削除されたアイテムも含む）
       const references = await prisma.mainCategoryItemReference.findMany({
         where: { mainCategoryId },
         include: {
@@ -66,17 +66,34 @@ export async function GET(request: NextRequest) {
           user: item.user,
           isReference: false,
         })),
-        ...references.map(ref => ({
-          id: ref.rankingItem.id,
-          title: ref.rankingItem.title,
-          description: ref.rankingItem.description,
-          position: ref.position,
-          user: ref.rankingItem.user,
-          isReference: true,
-          referenceId: ref.id,
-          sourceSubCategoryName: ref.rankingItem.subCategory?.name,
-          sourceSubCategoryId: ref.rankingItem.subCategory?.id,
-        })),
+        ...references.map(ref => {
+          // アイテムが削除されている場合（実際のアイテムが存在しないか、削除マークされている場合）
+          if (!ref.rankingItem || !ref.rankingItem.subCategoryId) {
+            return {
+              id: ref.rankingItem ? ref.rankingItem.id : `deleted-${ref.id}`,
+              title: "[削除されたアイテム]",
+              description: "",
+              position: ref.position,
+              user: null,
+              isReference: true,
+              referenceId: ref.id,
+              sourceSubCategoryName: null,
+              sourceSubCategoryId: null,
+              isDeleted: true
+            };
+          }
+          return {
+            id: ref.rankingItem.id,
+            title: ref.rankingItem.title,
+            description: ref.rankingItem.description,
+            position: ref.position,
+            user: ref.rankingItem.user,
+            isReference: true,
+            referenceId: ref.id,
+            sourceSubCategoryName: ref.rankingItem.subCategory?.name,
+            sourceSubCategoryId: ref.rankingItem.subCategory?.id,
+          };
+        }),
       ].sort((a, b) => (a.position || 999) - (b.position || 999));
     } else {
       return NextResponse.json({ error: "SubCategory ID or MainCategory ID is required" }, { status: 400 });

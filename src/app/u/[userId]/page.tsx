@@ -19,8 +19,8 @@ export default async function UserPage({ params, searchParams }: PageProps) {
       id: true,
       name: true,
       username: true,
-      image: true
-    }
+      image: true,
+    },
   });
 
   if (!user) {
@@ -29,13 +29,13 @@ export default async function UserPage({ params, searchParams }: PageProps) {
 
   // 現在のログインユーザー情報を取得
   const currentUser = await getCurrentUser();
-  
+
   // セッションのユーザーIDが存在しない場合の処理
-  if (currentUser && currentUser.userId) {
+  if (currentUser && (currentUser as any).userId) {
     const sessionUser = await prisma.user.findUnique({
-      where: { id: currentUser.userId }
+      where: { id: (currentUser as any).userId },
     });
-    
+
     if (!sessionUser) {
       // セッションのユーザーがDBに存在しない場合は、セッションを無効として扱う
       return notFound();
@@ -47,10 +47,10 @@ export default async function UserPage({ params, searchParams }: PageProps) {
     where: { userId: user.id },
     include: {
       subCategories: {
-        orderBy: { createdAt: 'asc' }
-      }
+        orderBy: { createdAt: "asc" },
+      },
     },
-    orderBy: { createdAt: 'asc' }
+    orderBy: { createdAt: "asc" },
   });
 
   // URLパラメータから初期選択状態を決定
@@ -65,15 +65,15 @@ export default async function UserPage({ params, searchParams }: PageProps) {
 
   // 初期ランキングデータを取得
   let initialRankings = null;
-  if (initialSelection.view === 'main' && initialSelection.mainCategoryId) {
+  if (initialSelection.view === "main" && initialSelection.mainCategoryId) {
     // 大カテゴリのランキングを取得
-    
+
     // 直接作成されたアイテム
     const directItems = await prisma.rankingItem.findMany({
-      where: { 
+      where: {
         userId: user.id,
-        mainCategoryId: initialSelection.mainCategoryId
-      }
+        mainCategoryId: initialSelection.mainCategoryId,
+      },
     });
 
     // 参照アイテム
@@ -82,22 +82,22 @@ export default async function UserPage({ params, searchParams }: PageProps) {
       include: {
         rankingItem: {
           include: {
-            subCategory: true
-          }
-        }
-      }
+            subCategory: true,
+          },
+        },
+      },
     });
-    
+
     // 結合して整形
     const allItems = [
-      ...directItems.map(item => ({
+      ...directItems.map((item) => ({
         id: item.id,
         title: item.title,
         description: item.description,
         position: item.position || 999,
         isReference: false,
       })),
-      ...references.map(ref => ({
+      ...references.map((ref) => ({
         id: ref.rankingItem.id,
         title: ref.rankingItem.title,
         description: ref.rankingItem.description,
@@ -105,40 +105,40 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         sourceSubCategoryName: ref.rankingItem.subCategory?.name,
         sourceSubCategoryId: ref.rankingItem.subCategoryId,
         isReference: true,
-        referenceId: ref.id
-      }))
+        referenceId: ref.id,
+      })),
     ].sort((a, b) => (a.position || 999) - (b.position || 999));
-    
+
     initialRankings = {
-      type: 'main',
+      type: "main",
       categoryId: initialSelection.mainCategoryId,
-      items: allItems
+      items: allItems,
     };
   } else if (initialSelection.subCategoryId) {
     // 小カテゴリのランキングを取得
     const items = await prisma.rankingItem.findMany({
-      where: { 
+      where: {
         userId: user.id,
-        subCategoryId: initialSelection.subCategoryId
-      }
+        subCategoryId: initialSelection.subCategoryId,
+      },
     });
-    
+
     initialRankings = {
-      type: 'sub',
+      type: "sub",
       categoryId: initialSelection.subCategoryId,
       categoryName: initialSelection.subCategory,
-      items: items.map(item => ({
+      items: items.map((item) => ({
         id: item.id,
         title: item.title,
         description: item.description,
-        position: item.position
-      }))
+        position: item.position,
+      })),
     };
   }
 
   return (
-    <UserRankingClient 
-      pageUser={user} 
+    <UserRankingClient
+      pageUser={user}
       currentUser={currentUser}
       initialCategories={categories}
       initialSelection={initialSelection}

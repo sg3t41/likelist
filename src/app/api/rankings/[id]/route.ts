@@ -127,6 +127,9 @@ export async function DELETE(
     // アイテムの存在確認と権限チェック
     const existingItem = await prisma.rankingItem.findUnique({
       where: { id: params.id },
+      include: {
+        mainCategoryReferences: true,
+      },
     });
 
     if (!existingItem) {
@@ -138,30 +141,26 @@ export async function DELETE(
     }
 
     // 削除前に、この項目を参照している大カテゴリがあるかチェック
-    const references = await prisma.mainCategoryItemReference.findMany({
-      where: { rankingItemId: params.id },
-      include: {
-        mainCategory: true,
-      },
-    });
+    const hasReferences = existingItem.mainCategoryReferences.length > 0;
 
-    // 各参照を直接項目に変換
-    for (const ref of references) {
-      await prisma.rankingItem.create({
+    if (hasReferences) {
+      // 参照がある場合は、項目を「削除済み」としてマークする
+      // タイトルを「[削除されたアイテム]」に変更し、説明をクリア
+      await prisma.rankingItem.update({
+        where: { id: params.id },
         data: {
-          title: existingItem.title,
-          description: existingItem.description,
-          position: ref.position,
-          mainCategoryId: ref.mainCategoryId,
-          userId: ref.mainCategory.userId,
+          title: "[削除されたアイテム]",
+          description: null,
+          // 小カテゴリから切り離す（大カテゴリの参照は残す）
+          subCategoryId: null,
         },
       });
+    } else {
+      // 参照がない場合は通常通り削除
+      await prisma.rankingItem.delete({
+        where: { id: params.id },
+      });
     }
-
-    // アイテムを削除（参照も自動的に削除される）
-    await prisma.rankingItem.delete({
-      where: { id: params.id },
-    });
 
     return NextResponse.json({ message: "Item deleted successfully" });
   } catch (error) {

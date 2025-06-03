@@ -8,22 +8,31 @@ interface AddRankingItemModalProps {
   categoryName: string;
   isMainCategoryView?: boolean;
   subCategories?: Array<{ id: string; name: string }>;
-  onAdd: (title: string, description: string, subCategoryId?: string, existingItemId?: string) => Promise<void>;
+  onAdd: (
+    title: string,
+    description: string,
+    subCategoryId?: string,
+    existingItemId?: string,
+  ) => Promise<void>;
 }
 
-export default function AddRankingItemModal({ 
-  isOpen, 
-  onClose, 
+export default function AddRankingItemModal({
+  isOpen,
+  onClose,
   categoryName,
   isMainCategoryView,
   subCategories,
-  onAdd 
+  onAdd,
 }: AddRankingItemModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [addMode, setAddMode] = useState<"direct" | "subcategory" | "existing">("direct");
+  const [addMode, setAddMode] = useState<"direct" | "subcategory" | "existing">(
+    "direct",
+  );
   const [selectedSubCategoryId, setSelectedSubCategoryId] = useState("");
-  const [existingItems, setExistingItems] = useState<Array<{id: string, title: string, description?: string}>>([]);
+  const [existingItems, setExistingItems] = useState<
+    Array<{ id: string; title: string; description?: string }>
+  >([]);
   const [selectedExistingItemId, setSelectedExistingItemId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
@@ -34,14 +43,18 @@ export default function AddRankingItemModal({
       if (selectedSubCategoryId && addMode === "existing") {
         setIsLoadingItems(true);
         try {
-          const response = await fetch(`/api/rankings?subCategoryId=${selectedSubCategoryId}`);
+          const response = await fetch(
+            `/api/rankings?subCategoryId=${selectedSubCategoryId}`,
+          );
           if (response.ok) {
             const items = await response.json();
-            setExistingItems(items.map((item: any) => ({
-              id: item.id,
-              title: item.title,
-              description: item.description
-            })));
+            setExistingItems(
+              items.map((item: any) => ({
+                id: item.id,
+                title: item.title,
+                description: item.description,
+              })),
+            );
           }
         } catch (error) {
           console.error("Error fetching existing items:", error);
@@ -56,7 +69,7 @@ export default function AddRankingItemModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (addMode === "existing") {
       if (!selectedExistingItemId) {
         alert("既存の項目を選択してください");
@@ -69,7 +82,11 @@ export default function AddRankingItemModal({
       }
     }
 
-    if (isMainCategoryView && addMode === "existing" && !selectedSubCategoryId) {
+    if (
+      isMainCategoryView &&
+      addMode === "existing" &&
+      !selectedSubCategoryId
+    ) {
       alert("小カテゴリを選択してください");
       return;
     }
@@ -82,7 +99,7 @@ export default function AddRankingItemModal({
         // 新規項目追加（大カテゴリ直接 or 小カテゴリ）
         await onAdd(title, description);
       }
-      
+
       setTitle("");
       setDescription("");
       setSelectedSubCategoryId("");
@@ -109,20 +126,21 @@ export default function AddRankingItemModal({
         <form onSubmit={handleSubmit}>
           {isMainCategoryView && subCategories && subCategories.length > 0 && (
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                追加先を選択
-              </label>
               <div className="space-y-2">
                 <label className="flex items-center">
                   <input
                     type="radio"
                     value="direct"
                     checked={addMode === "direct"}
-                    onChange={(e) => setAddMode(e.target.value as "direct" | "subcategory" | "existing")}
+                    onChange={(e) =>
+                      setAddMode(
+                        e.target.value as "direct" | "subcategory" | "existing",
+                      )
+                    }
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {categoryName}に直接追加（新規項目）
+                    新規で追加
                   </span>
                 </label>
                 <label className="flex items-center">
@@ -130,11 +148,15 @@ export default function AddRankingItemModal({
                     type="radio"
                     value="existing"
                     checked={addMode === "existing"}
-                    onChange={(e) => setAddMode(e.target.value as "direct" | "subcategory" | "existing")}
+                    onChange={(e) =>
+                      setAddMode(
+                        e.target.value as "direct" | "subcategory" | "existing",
+                      )
+                    }
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    小カテゴリから既存項目を選択
+                    小カテゴリから選択
                   </span>
                 </label>
               </div>
@@ -173,12 +195,17 @@ export default function AddRankingItemModal({
               ) : existingItems.length > 0 ? (
                 <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md">
                   {existingItems.map((item) => (
-                    <label key={item.id} className="flex items-start p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-600 last:border-b-0">
+                    <label
+                      key={item.id}
+                      className="flex items-start p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-600 last:border-b-0"
+                    >
                       <input
                         type="radio"
                         value={item.id}
                         checked={selectedExistingItemId === item.id}
-                        onChange={(e) => setSelectedExistingItemId(e.target.value)}
+                        onChange={(e) =>
+                          setSelectedExistingItemId(e.target.value)
+                        }
                         className="mr-3 mt-1"
                       />
                       <div>

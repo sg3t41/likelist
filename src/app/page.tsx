@@ -7,15 +7,15 @@ export default async function Home() {
   // 現在のログインユーザー情報を取得
   const currentUser = await getCurrentUser();
   
-  if (currentUser && currentUser.userId) {
+  if (currentUser && (currentUser as any).userId) {
     // ユーザーIDがセッションにある場合、DBに存在するか確認
     const dbUser = await prisma.user.findUnique({
-      where: { id: currentUser.userId }
+      where: { id: (currentUser as any).userId }
     });
     
     if (dbUser) {
       // ユーザーが存在する場合はリダイレクト
-      redirect(`/u/${currentUser.userId}`);
+      redirect(`/u/${(currentUser as any).userId}`);
     }
     // ユーザーが存在しない場合は、セッションが古いのでログイン画面を表示
   }
