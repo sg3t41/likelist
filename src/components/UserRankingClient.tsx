@@ -649,6 +649,7 @@ export default function UserRankingClient({
       await handlePositionChange(draggedItem.item, dragOverPosition);
     }
     
+    // 確実にドラッグ状態をクリア
     setDraggedItem(null);
     setDragOverPosition(null);
   };
@@ -690,15 +691,37 @@ export default function UserRankingClient({
 
   // タッチドラッグのクリーンアップ
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // ページが非表示になった時にドラッグ状態をリセット
+        setDraggedItem(null);
+        setDragOverPosition(null);
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          setLongPressTimer(null);
+        }
+        if (touchDragElement && document.body.contains(touchDragElement)) {
+          document.body.removeChild(touchDragElement);
+          setTouchDragElement(null);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (longPressTimer) {
         clearTimeout(longPressTimer);
       }
       if (touchDragElement && document.body.contains(touchDragElement)) {
         document.body.removeChild(touchDragElement);
       }
+      // コンポーネントアンマウント時に確実にドラッグ状態をリセット
+      setDraggedItem(null);
+      setDragOverPosition(null);
     };
-  }, []);
+  }, [longPressTimer, touchDragElement]);
 
   // ドラッグ中のタッチムーブイベントでスクロール防止
   useEffect(() => {
@@ -708,10 +731,13 @@ export default function UserRankingClient({
       }
     };
 
-    // non-passiveリスナーとして登録
-    document.addEventListener('touchmove', preventScroll, { passive: false });
+    if (draggedItem) {
+      // ドラッグ開始時のみリスナーを追加
+      document.addEventListener('touchmove', preventScroll, { passive: false });
+    }
     
     return () => {
+      // クリーンアップで必ずリスナーを削除
       document.removeEventListener('touchmove', preventScroll);
     };
   }, [draggedItem]);
