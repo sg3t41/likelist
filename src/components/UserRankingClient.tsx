@@ -623,14 +623,20 @@ export default function UserRankingClient({
   const handleTouchMove = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     
-    // 長押し中でない場合はスクロールを許可
+    // ドラッグ中でない場合
     if (!draggedItem) {
+      // 長押しタイマー中に移動した場合、タイマーをキャンセル（通常のスクロール）
       if (longPressTimer && Math.abs(touch.clientY - touchStartY) > 10) {
         clearTimeout(longPressTimer);
         setLongPressTimer(null);
       }
+      // 通常のスクロールを許可するため、何もしない
       return;
     }
+    
+    // ドラッグ中の場合のみpreventDefaultを呼ぶ
+    e.preventDefault();
+    e.stopPropagation();
     
     // ドラッグ要素を移動
     if (touchDragElement) {
@@ -649,6 +655,12 @@ export default function UserRankingClient({
   };
 
   const handleTouchEnd = async (e: React.TouchEvent) => {
+    // ドラッグ中の場合のみイベントを処理
+    if (draggedItem) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     // 長押しタイマーをクリア
     if (longPressTimer) {
       clearTimeout(longPressTimer);
@@ -672,11 +684,9 @@ export default function UserRankingClient({
       await handlePositionChange(draggedItem.item, dragOverPosition);
     }
     
-    // 必ずドラッグ状態をクリア（少し遅延させて確実に）
-    setTimeout(() => {
-      setDraggedItem(null);
-      setDragOverPosition(null);
-    }, 50);
+    // ドラッグ状態をクリア
+    setDraggedItem(null);
+    setDragOverPosition(null);
   };
 
   // 初期ハイライトのタイマー処理
@@ -742,25 +752,8 @@ export default function UserRankingClient({
     };
   }, [draggedItem, longPressTimer, touchDragElement, resetDragState]);
 
-  // ドラッグ中のタッチムーブイベントでスクロール防止
-  useEffect(() => {
-    let preventScrollHandler: ((e: TouchEvent) => void) | null = null;
-
-    if (draggedItem && touchDragElement) {
-      // ドラッグ要素が存在する場合のみスクロールを防止
-      preventScrollHandler = (e: TouchEvent) => {
-        e.preventDefault();
-      };
-      
-      document.addEventListener('touchmove', preventScrollHandler, { passive: false });
-    }
-    
-    return () => {
-      if (preventScrollHandler) {
-        document.removeEventListener('touchmove', preventScrollHandler);
-      }
-    };
-  }, [draggedItem, touchDragElement]);
+  // グローバルなスクロール防止は削除
+  // ドラッグ中のスクロール防止は各タッチイベントハンドラー内で個別に処理
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -1146,24 +1139,9 @@ export default function UserRankingClient({
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, position)}
                       onDragEnd={handleDragEnd}
-                      onTouchStart={(e) => {
-                        // 長押しでのみドラッグ開始するため、通常のタッチは素通し
-                        if (item && isOwner && !item.isDeleted) {
-                          handleTouchStart(e, item, position);
-                        }
-                      }}
-                      onTouchMove={(e) => {
-                        // ドラッグ中のみ処理、通常スクロールは阻害しない
-                        if (draggedItem) {
-                          handleTouchMove(e);
-                        }
-                      }}
-                      onTouchEnd={(e) => {
-                        // ドラッグ中またはタイマー実行中のみ処理
-                        if (draggedItem || longPressTimer) {
-                          handleTouchEnd(e);
-                        }
-                      }}
+                      onTouchStart={(e) => item && isOwner && !item.isDeleted && handleTouchStart(e, item, position)}
+                      onTouchMove={(e) => item && isOwner && !item.isDeleted && handleTouchMove(e)}
+                      onTouchEnd={(e) => handleTouchEnd(e)}
                     >
                       <div className="flex items-center space-x-4 flex-1">
                         <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
