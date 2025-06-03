@@ -209,6 +209,14 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      console.log("Created ranking item:", {
+        id: rankingItem.id,
+        title: rankingItem.title,
+        position: rankingItem.position,
+        mainCategoryId: rankingItem.mainCategoryId,
+        subCategoryId: rankingItem.subCategoryId
+      });
+
       return NextResponse.json(rankingItem);
     }
   } catch (error) {
