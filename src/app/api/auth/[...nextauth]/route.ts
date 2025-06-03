@@ -4,19 +4,26 @@ import TwitterProvider from "next-auth/providers/twitter";
 import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
-  debug: process.env.NODE_ENV === 'development',
+  debug: true,
+  logger: {
+    error(code, metadata) {
+      console.error('NextAuth Error:', code, metadata);
+    },
+    warn(code) {
+      console.warn('NextAuth Warning:', code);
+    },
+    debug(code, metadata) {
+      console.log('NextAuth Debug:', code, metadata);
+    }
+  },
   secret: process.env.NEXTAUTH_SECRET,
+  // 明示的にURLを設定
+  ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
   providers: [
     TwitterProvider({
       clientId: process.env.TWITTER_CLIENT_ID!,
       clientSecret: process.env.TWITTER_CLIENT_SECRET!,
       version: "2.0",
-      authorization: {
-        params: {
-          scope: "users.read tweet.read offline.access",
-        },
-      },
-      checks: ["state"], // CSRFチェックを有効化
     }),
   ],
   session: {
@@ -38,38 +45,44 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, account, profile }) {
+      console.log('SignIn callback called:', { user: user?.name, provider: account?.provider });
+      
       if (account?.provider === "twitter") {
         try {
           // Twitter v2 APIではusernameがdata内にある
           const twitterProfile = profile as any;
+          console.log('Twitter profile received:', twitterProfile);
+          
           const username = twitterProfile.data?.username || twitterProfile.username;
           
           if (!username) {
             console.error("Username not found in profile:", profile);
-            // usernameが取得できない場合でも、ログインは許可する（emailやidで判断）
-            console.log("Attempting login without username, using email or id");
+            // usernameが取得できない場合でも、ログインは許可する
+            console.log("Proceeding without username - user will need to set it later");
+            return true;
           }
 
+          console.log(`Attempting to save user with username: ${username}`);
+
           // Prisma接続を確実にするため、リトライロジックを追加
-          let retries = 5; // リトライ回数を増やす
+          let retries = 3; // リトライ回数を減らして高速化
           while (retries > 0) {
             try {
-              if (username) {
-                await prisma.user.upsert({
-                  where: { username },
-                  update: {
-                    name: user.name,
-                    email: user.email,
-                    image: user.image,
-                  },
-                  create: {
-                    username,
-                    name: user.name,
-                    email: user.email,
-                    image: user.image,
-                  },
-                });
-              }
+              const savedUser = await prisma.user.upsert({
+                where: { username },
+                update: {
+                  name: user.name,
+                  email: user.email,
+                  image: user.image,
+                },
+                create: {
+                  username,
+                  name: user.name,
+                  email: user.email,
+                  image: user.image,
+                },
+              });
+              console.log(`User saved successfully: ${savedUser.id}`);
               return true;
             } catch (dbError: any) {
               retries--;
@@ -81,12 +94,12 @@ export const authOptions: NextAuthOptions = {
                 return true;
               }
               
-              // 待機時間を段階的に増やす
-              await new Promise(resolve => setTimeout(resolve, (6 - retries) * 200));
+              // 短い待機時間
+              await new Promise(resolve => setTimeout(resolve, 300));
             }
           }
         } catch (error) {
-          console.error("Error in signIn callback:", error);
+          console.error("Unexpected error in signIn callback:", error);
           // エラーが発生してもログインは許可（ユーザー体験を優先）
           return true;
         }
