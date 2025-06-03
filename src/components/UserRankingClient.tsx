@@ -421,6 +421,8 @@ export default function UserRankingClient({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          title: item.title,
+          description: item.description || '',
           position: newPosition,
           ...(isMainCategoryView && { mainCategoryId: selectedMainCategoryId })
         }),
@@ -450,6 +452,10 @@ export default function UserRankingClient({
             }));
           }
         }
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to update position:", errorData);
+        alert(`順位の変更に失敗しました: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Error updating position:", error);
@@ -543,12 +549,15 @@ export default function UserRankingClient({
     e.preventDefault();
     setDragOverPosition(null);
 
+    console.log("handleDrop:", { draggedItem, dropPosition });
+
     if (!draggedItem || draggedItem.position === dropPosition) {
       setDraggedItem(null);
       return;
     }
 
     // 順位を入れ替える
+    console.log("Changing position from", draggedItem.position, "to", dropPosition);
     await handlePositionChange(draggedItem.item, dropPosition);
     setDraggedItem(null);
   };
