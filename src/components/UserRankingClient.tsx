@@ -1139,20 +1139,25 @@ export default function UserRankingClient({
           subCategories={isMainCategoryView ? allCategories.find(cat => cat.id === selectedMainCategoryId)?.subCategories : undefined}
           onAdd={async (title: string, description: string, subCategoryId?: string, existingItemId?: string) => {
             console.log("onAdd called with:", { title, description, subCategoryId, existingItemId, targetPosition, isMainCategoryView, selectedMainCategoryId, selectedSubCategoryId });
+            
+            const requestBody = {
+              title,
+              description,
+              position: targetPosition,
+              subCategoryId: isMainCategoryView && existingItemId ? subCategoryId : (!isMainCategoryView ? selectedSubCategoryId : undefined),
+              mainCategoryId: isMainCategoryView ? selectedMainCategoryId : undefined,
+              existingItemId
+            };
+            
+            console.log("Sending request body:", requestBody);
+            
             try {
               const response = await fetch('/api/rankings', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                  title,
-                  description,
-                  position: targetPosition,
-                  subCategoryId: isMainCategoryView && existingItemId ? subCategoryId : (!isMainCategoryView ? selectedSubCategoryId : undefined),
-                  mainCategoryId: isMainCategoryView && !existingItemId ? selectedMainCategoryId : undefined,
-                  existingItemId
-                }),
+                body: JSON.stringify(requestBody),
               });
 
               console.log("API response status:", response.status);
