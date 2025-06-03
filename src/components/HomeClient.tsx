@@ -2,7 +2,11 @@
 
 import { signIn } from "next-auth/react";
 
-export default function HomeClient() {
+interface HomeClientProps {
+  currentUser?: any;
+}
+
+export default function HomeClient({ currentUser }: HomeClientProps) {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
       <div className="max-w-md w-full space-y-8 p-8">
@@ -11,7 +15,10 @@ export default function HomeClient() {
             好きなものリストへようこそ
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            あなたの好きなものリストを作成・共有しましょう
+            {currentUser 
+              ? "セッションを更新中です。しばらくお待ちください..." 
+              : "あなたの好きなものリストを作成・共有しましょう"
+            }
           </p>
         </div>
         <div className="mt-8">
@@ -22,7 +29,7 @@ export default function HomeClient() {
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
             </svg>
-            Xでログイン
+            {currentUser ? "再ログイン" : "Xでログイン"}
           </button>
         </div>
       </div>
