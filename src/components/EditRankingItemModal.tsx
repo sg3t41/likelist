@@ -9,10 +9,12 @@ interface EditRankingItemModalProps {
     id: string;
     title: string;
     description?: string;
+    url?: string;
+    images?: { id: string; url: string; order: number }[];
     position?: number;
   } | null;
   totalItems: number;
-  onSave: (id: string, title: string, description: string, position?: number) => Promise<void>;
+  onSave: (id: string, title: string, description: string, url: string, position?: number) => Promise<void>;
 }
 
 export default function EditRankingItemModal({ 
@@ -24,14 +26,34 @@ export default function EditRankingItemModal({
 }: EditRankingItemModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [url, setUrl] = useState("");
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSavingImages, setIsSavingImages] = useState(false);
 
   useEffect(() => {
     if (item) {
       setTitle(item.title);
       setDescription(item.description || "");
+      setUrl(item.url || "");
+      setImageUrls(item.images?.map(img => img.url) || []);
     }
   }, [item]);
+
+  const addImageUrl = () => {
+    setImageUrls([...imageUrls, ""]);
+  };
+
+  const updateImageUrl = (index: number, value: string) => {
+    const newUrls = [...imageUrls];
+    newUrls[index] = value;
+    setImageUrls(newUrls);
+  };
+
+  const removeImageUrl = (index: number) => {
+    const newUrls = imageUrls.filter((_, i) => i !== index);
+    setImageUrls(newUrls);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,12 +65,31 @@ export default function EditRankingItemModal({
 
     setIsLoading(true);
     try {
-      await onSave(item.id, title, description);
+      await onSave(item.id, title, description, url);
+      
+      // 画像を更新（空の配列でも送信して既存画像をクリア）
+      setIsSavingImages(true);
+      const validUrls = imageUrls.filter(url => url.trim());
+      const response = await fetch(`/api/rankings/${item.id}/images`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ images: validUrls }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Failed to update images:', errorData);
+        throw new Error('画像の更新に失敗しました');
+      }
+      
       onClose();
     } catch (error) {
       console.error("Error editing ranking item:", error);
     } finally {
       setIsLoading(false);
+      setIsSavingImages(false);
     }
   };
 
@@ -88,6 +129,61 @@ export default function EditRankingItemModal({
             />
           </div>
 
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              リンクを追加
+            </label>
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="https://example.com"
+            />
+          </div>
+
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                画像リンク
+              </label>
+              <button
+                type="button"
+                onClick={addImageUrl}
+                className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                画像を追加
+              </button>
+            </div>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {imageUrls.map((imageUrl, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => updateImageUrl(index, e.target.value)}
+                    placeholder="画像URL"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImageUrl(index)}
+                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              {imageUrls.length === 0 && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
+                  画像がありません
+                </p>
+              )}
+            </div>
+          </div>
+
           <div className="flex gap-2 justify-end">
             <button
               type="button"
@@ -100,9 +196,9 @@ export default function EditRankingItemModal({
             <button
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-              disabled={isLoading}
+              disabled={isLoading || isSavingImages}
             >
-              {isLoading ? "保存中..." : "保存"}
+              {isLoading || isSavingImages ? "保存中..." : "保存"}
             </button>
           </div>
         </form>

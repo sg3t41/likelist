@@ -23,6 +23,9 @@ export async function GET(request: NextRequest) {
           subCategory: {
             select: { name: true },
           },
+          images: {
+            orderBy: { order: "asc" },
+          },
         },
         orderBy: { position: "asc" },
       });
@@ -35,6 +38,9 @@ export async function GET(request: NextRequest) {
         include: {
           user: {
             select: { name: true, username: true },
+          },
+          images: {
+            orderBy: { order: "asc" },
           },
         },
       });
@@ -51,6 +57,9 @@ export async function GET(request: NextRequest) {
               subCategory: {
                 select: { id: true, name: true },
               },
+              images: {
+                orderBy: { order: "asc" },
+              },
             },
           },
         },
@@ -62,6 +71,8 @@ export async function GET(request: NextRequest) {
           id: item.id,
           title: item.title,
           description: item.description,
+          url: item.url,
+          images: item.images,
           position: item.position,
           user: item.user,
           isReference: false,
@@ -86,6 +97,8 @@ export async function GET(request: NextRequest) {
             id: ref.rankingItem.id,
             title: ref.rankingItem.title,
             description: ref.rankingItem.description,
+            url: ref.rankingItem.url,
+            images: ref.rankingItem.images,
             position: ref.position,
             user: ref.rankingItem.user,
             isReference: true,
@@ -115,7 +128,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = (session.user as any).userId;
-    const { title, description, subCategoryId, mainCategoryId, existingItemId, position } = await request.json();
+    const { title, description, url, subCategoryId, mainCategoryId, existingItemId, position } = await request.json();
 
     if (existingItemId) {
       // 既存項目をメインカテゴリに追加する場合
@@ -208,6 +221,7 @@ export async function POST(request: NextRequest) {
         data: {
           title,
           description,
+          url,
           position: position || null,
           subCategoryId: subCategoryId || null,
           mainCategoryId: mainCategoryId || null,

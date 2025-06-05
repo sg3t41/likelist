@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -60,6 +60,7 @@ model RankingItem {
   id              String    @id @default(cuid())
   title           String
   description     String?
+  url             String?   // リンクURL
   position        Int?      // 順位を保持（小カテゴリでの順位）
   subCategoryId   String?
   subCategory     SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
@@ -71,6 +72,16 @@ model RankingItem {
   updatedAt       DateTime  @updatedAt
   
   mainCategoryReferences MainCategoryItemReference[]
+  images          RankingItemImage[]
+}
+
+model RankingItemImage {
+  id              String    @id @default(cuid())
+  url             String
+  rankingItemId   String
+  rankingItem     RankingItem @relation(fields: [rankingItemId], references: [id], onDelete: Cascade)
+  order           Int       @default(0)  // 表示順序
+  createdAt       DateTime  @default(now())
 }
 
 model MainCategoryItemReference {

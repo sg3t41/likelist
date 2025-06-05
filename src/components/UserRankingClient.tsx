@@ -23,6 +23,8 @@ type RankingItem = {
   id: number | string;
   title: string;
   description?: string;
+  url?: string;
+  images?: { id: string; url: string; order: number }[];
   position?: number;
   sourceSubCategoryName?: string;
   sourceSubCategoryId?: string;
@@ -116,7 +118,36 @@ export default function UserRankingClient({
   const [isRankingMenuOpen, setIsRankingMenuOpen] = useState(false);
   const [openItemMenuId, setOpenItemMenuId] = useState<string | null>(null);
   const [selectedItemForMove, setSelectedItemForMove] = useState<{item: RankingItem, position: number} | null>(null);
+  const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{type: 'main' | 'sub', id: string, name: string, subCategories?: any[]} | null>(null);
+  const [openCategoryMenuId, setOpenCategoryMenuId] = useState<string | null>(null);
+  
+  // Drag and drop state variables
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<{item: RankingItem, position: number} | null>(null);
+  const [dragOverPosition, setDragOverPosition] = useState<number | null>(null);
+  const [touchStartPosition, setTouchStartPosition] = useState<{x: number, y: number} | null>(null);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [touchDragElement, setTouchDragElement] = useState<HTMLElement | null>(null);
 
+  // Reset drag state function
+  const resetDragState = () => {
+    setIsDragging(false);
+    setDraggedItem(null);
+    setDragOverPosition(null);
+    setTouchStartPosition(null);
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+    if (touchDragElement) {
+      touchDragElement.remove();
+      setTouchDragElement(null);
+    }
+    // Re-enable scrolling
+    document.body.style.overflow = '';
+    document.body.style.touchAction = '';
+  };
 
   const updateURL = (params: Record<string, string>) => {
     const newParams = new URLSearchParams();
@@ -151,7 +182,9 @@ export default function UserRankingClient({
           rankingMap[position] = {
             id: item.id,
             title: item.title,
-            description: item.description
+            description: item.description,
+            url: item.url,
+            images: item.images
           };
         });
         setRankings(prev => ({
@@ -193,6 +226,8 @@ export default function UserRankingClient({
             id: item.id,
             title: item.title,
             description: item.description,
+            url: item.url,
+            images: item.images,
             sourceSubCategoryName: item.sourceSubCategoryName,
             sourceSubCategoryId: item.sourceSubCategoryId,
             isReference: item.isReference,
@@ -388,7 +423,9 @@ export default function UserRankingClient({
               rankingMap[position] = {
                 id: item.id,
                 title: item.title,
-                description: item.description
+                description: item.description,
+                url: item.url,
+                images: item.images
               };
             });
             setRankings(prev => ({
@@ -447,7 +484,9 @@ export default function UserRankingClient({
               rankingMap[position] = {
                 id: item.id,
                 title: item.title,
-                description: item.description
+                description: item.description,
+                url: item.url,
+                images: item.images
               };
             });
             setRankings(prev => ({
@@ -467,7 +506,7 @@ export default function UserRankingClient({
     }
   };
 
-  const handleEditItem = async (id: string, title: string, description: string, position?: number) => {
+  const handleEditItem = async (id: string, title: string, description: string, url: string, position?: number) => {
     try {
       // 編集対象のアイテムを探す
       const currentRankings = isMainCategoryView 
@@ -497,6 +536,7 @@ export default function UserRankingClient({
         body: JSON.stringify({
           title,
           description,
+          url,
           position,
           ...(isMainCategoryView && { mainCategoryId: selectedMainCategoryId })
         }),
@@ -517,7 +557,9 @@ export default function UserRankingClient({
               rankingMap[position] = {
                 id: item.id,
                 title: item.title,
-                description: item.description
+                description: item.description,
+                url: item.url,
+                images: item.images
               };
             });
             setRankings(prev => ({
@@ -760,30 +802,82 @@ export default function UserRankingClient({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isRankingMenuOpen, openItemMenuId]);
 
-  // タッチドラッグのクリーンアップ
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        resetDragState();
-      }
-    };
-
-    const handleOrientationChange = () => {
-      resetDragState();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('orientationchange', handleOrientationChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('orientationchange', handleOrientationChange);
-      resetDragState();
-    };
-  }, []);
 
   // グローバルなスクロール防止は削除
   // ドラッグ中のスクロール防止は各タッチイベントハンドラー内で個別に処理
+
+  // カテゴリ削除確認モーダル
+  const DeleteCategoryModal = () => {
+    if (!showDeleteCategoryModal || !categoryToDelete) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            カテゴリを削除しますか？
+          </h3>
+          
+          <div className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mb-2">
+              <span className="font-semibold text-gray-900 dark:text-white">
+                「{categoryToDelete.name}」
+              </span>
+              を削除しようとしています。
+            </p>
+            
+            {categoryToDelete.type === 'main' && categoryToDelete.subCategories && categoryToDelete.subCategories.length > 0 && (
+              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-800">
+                <p className="text-yellow-800 dark:text-yellow-200 font-medium mb-2">
+                  以下の小カテゴリも削除されます：
+                </p>
+                <ul className="list-disc list-inside text-yellow-700 dark:text-yellow-300">
+                  {categoryToDelete.subCategories.map((sub: any) => (
+                    <li key={sub.id}>{sub.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <p className="mt-4 text-red-600 dark:text-red-400">
+              この操作は取り消せません。関連するすべての項目も削除されます。
+            </p>
+          </div>
+          
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setShowDeleteCategoryModal(false);
+                setCategoryToDelete(null);
+              }}
+              className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+            >
+              キャンセル
+            </button>
+            <button
+              onClick={async () => {
+                if (!categoryToDelete) return;
+                
+                try {
+                  if (categoryToDelete.type === 'main') {
+                    await handleDeleteMainCategory(categoryToDelete.id);
+                  } else {
+                    await handleDeleteSubCategory(categoryToDelete.id);
+                  }
+                  setShowDeleteCategoryModal(false);
+                  setCategoryToDelete(null);
+                } catch (error) {
+                  console.error("Error deleting category:", error);
+                }
+              }}
+              className="flex-1 px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-md"
+            >
+              削除
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -1132,6 +1226,48 @@ export default function UserRankingClient({
                             </svg>
                             Xで共有
                           </button>
+                          {isOwner && (
+                            <>
+                              <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                              <button
+                                onClick={() => {
+                                  // 現在選択されているカテゴリの情報を取得
+                                  if (isMainCategoryView) {
+                                    const mainCat = allCategories.find(cat => cat.id === selectedMainCategoryId);
+                                    if (mainCat) {
+                                      setCategoryToDelete({
+                                        type: 'main',
+                                        id: mainCat.id,
+                                        name: mainCat.name,
+                                        subCategories: mainCat.subCategories
+                                      });
+                                    }
+                                  } else {
+                                    // 小カテゴリの場合、親カテゴリを探す
+                                    const targetSubCategory = allCategories.flatMap(cat => 
+                                      cat.subCategories.map((sub: any) => ({ ...sub, mainCategoryId: cat.id }))
+                                    ).find((sub: any) => sub.id === selectedSubCategoryId);
+                                    
+                                    if (targetSubCategory) {
+                                      setCategoryToDelete({
+                                        type: 'sub',
+                                        id: targetSubCategory.id,
+                                        name: targetSubCategory.name
+                                      });
+                                    }
+                                  }
+                                  setShowDeleteCategoryModal(true);
+                                  setIsRankingMenuOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                カテゴリを削除
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     )}
@@ -1169,13 +1305,28 @@ export default function UserRankingClient({
                         
                         {/* コンテンツ部分：完全にスクロール可能 */}
                         <div className="flex-1 min-w-0">
-                          <h3 className={`text-lg font-medium truncate ${
-                            item?.isDeleted 
-                              ? "text-gray-400 dark:text-gray-600 italic" 
-                              : "text-gray-900 dark:text-white"
-                          }`}>
-                            {item ? item.title : "―"}
-                          </h3>
+                          {item?.url && !item?.isDeleted ? (
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`text-lg font-medium truncate block hover:underline ${
+                                item?.isDeleted 
+                                  ? "text-gray-400 dark:text-gray-600 italic" 
+                                  : "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                              }`}
+                            >
+                              {item.title}
+                            </a>
+                          ) : (
+                            <h3 className={`text-lg font-medium truncate ${
+                              item?.isDeleted 
+                                ? "text-gray-400 dark:text-gray-600 italic" 
+                                : "text-gray-900 dark:text-white"
+                            }`}>
+                              {item ? item.title : "―"}
+                            </h3>
+                          )}
                           {item?.description && !item?.isDeleted && (
                             <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                               {item.description}
@@ -1201,6 +1352,37 @@ export default function UserRankingClient({
                             >
                               {item.sourceSubCategoryName} {position}位
                             </button>
+                          )}
+                          {item?.images && item.images.length > 0 && !item?.isDeleted && (
+                            <div className={`mt-2 gap-2 ${
+                              item.images.length === 1 
+                                ? 'flex justify-start' 
+                                : item.images.length === 2 
+                                ? 'grid grid-cols-2' 
+                                : item.images.length === 3
+                                ? 'grid grid-cols-3'
+                                : 'grid grid-cols-2'
+                            }`}>
+                              {item.images.map((image, idx) => (
+                                <img
+                                  key={image.id}
+                                  src={image.url}
+                                  alt={`${item.title} - 画像${idx + 1}`}
+                                  className={`rounded-md border border-gray-200 dark:border-gray-700 object-cover ${
+                                    item.images.length === 1 
+                                      ? 'w-32 h-32' 
+                                      : item.images.length === 2 
+                                      ? 'w-full h-24' 
+                                      : item.images.length === 3
+                                      ? 'w-full h-20'
+                                      : 'w-full h-20'
+                                  }`}
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              ))}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -1229,6 +1411,18 @@ export default function UserRankingClient({
                                       <>
                                         <button
                                           onClick={() => {
+                                            setSelectedItemForMove({ item, position });
+                                            setOpenItemMenuId(null);
+                                          }}
+                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                        >
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                          </svg>
+                                          順位を変更
+                                        </button>
+                                        <button
+                                          onClick={() => {
                                             setSelectedItemForEdit(item);
                                             setIsEditRankingItemModalOpen(true);
                                             setOpenItemMenuId(null);
@@ -1240,36 +1434,8 @@ export default function UserRankingClient({
                                           </svg>
                                           編集
                                         </button>
-                                        <button
-                                          onClick={() => {
-                                            setSelectedItemForMove({ item, position });
-                                            setOpenItemMenuId(null);
-                                          }}
-                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                        >
-                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                                          </svg>
-                                          順位を変更
-                                        </button>
                                       </>
                                     )}
-                                    <button
-                                      onClick={() => {
-                                        handleDeleteRankingItem(
-                                          item.id.toString(),
-                                          item.isReference || false,
-                                          item.referenceId
-                                        );
-                                        setOpenItemMenuId(null);
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-                                    >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                      </svg>
-                                      削除
-                                    </button>
                                   </>
                                 )}
                                 <button
@@ -1284,6 +1450,24 @@ export default function UserRankingClient({
                                   </svg>
                                   Xで共有
                                 </button>
+                                {isOwner && (
+                                  <button
+                                    onClick={() => {
+                                      handleDeleteRankingItem(
+                                        item.id.toString(),
+                                        item.isReference || false,
+                                        item.referenceId
+                                      );
+                                      setOpenItemMenuId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    削除
+                                  </button>
+                                )}
                               </div>
                             </div>
                           )}
@@ -1397,12 +1581,13 @@ export default function UserRankingClient({
           categoryName={isMainCategoryView ? selectedMainCategory : selectedCategory}
           isMainCategoryView={isMainCategoryView}
           subCategories={isMainCategoryView ? allCategories.find(cat => cat.id === selectedMainCategoryId)?.subCategories : undefined}
-          onAdd={async (title: string, description: string, subCategoryId?: string, existingItemId?: string) => {
-            console.log("onAdd called with:", { title, description, subCategoryId, existingItemId, targetPosition, isMainCategoryView, selectedMainCategoryId, selectedSubCategoryId });
+          onAdd={async (title: string, description: string, url?: string, subCategoryId?: string, existingItemId?: string) => {
+            console.log("onAdd called with:", { title, description, url, subCategoryId, existingItemId, targetPosition, isMainCategoryView, selectedMainCategoryId, selectedSubCategoryId });
             
             const requestBody = {
               title,
               description,
+              url,
               position: targetPosition,
               subCategoryId: isMainCategoryView && existingItemId ? subCategoryId : (!isMainCategoryView ? selectedSubCategoryId : undefined),
               mainCategoryId: isMainCategoryView ? selectedMainCategoryId : undefined,
@@ -1436,7 +1621,9 @@ export default function UserRankingClient({
                       rankingMap[position] = {
                         id: item.id,
                         title: item.title,
-                        description: item.description
+                        description: item.description,
+                        url: item.url,
+                        images: item.images
                       };
                     });
                     setRankings(prev => ({
@@ -1479,6 +1666,9 @@ export default function UserRankingClient({
           }}
         />
       )}
+
+      {/* カテゴリ削除確認モーダル */}
+      <DeleteCategoryModal />
     </div>
   );
 }

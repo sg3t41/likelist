@@ -74,6 +74,11 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         userId: user.id,
         mainCategoryId: initialSelection.mainCategoryId,
       },
+      include: {
+        images: {
+          orderBy: { order: "asc" },
+        },
+      },
     });
 
     // 参照アイテム
@@ -83,6 +88,9 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         rankingItem: {
           include: {
             subCategory: true,
+            images: {
+              orderBy: { order: "asc" },
+            },
           },
         },
       },
@@ -94,6 +102,8 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         id: item.id,
         title: item.title,
         description: item.description,
+        url: item.url,
+        images: item.images,
         position: item.position || 999,
         isReference: false,
       })),
@@ -101,6 +111,8 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         id: ref.rankingItem.id,
         title: ref.rankingItem.title,
         description: ref.rankingItem.description,
+        url: ref.rankingItem.url,
+        images: ref.rankingItem.images,
         position: ref.position || 999,
         sourceSubCategoryName: ref.rankingItem.subCategory?.name,
         sourceSubCategoryId: ref.rankingItem.subCategoryId,
@@ -121,6 +133,11 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         userId: user.id,
         subCategoryId: initialSelection.subCategoryId,
       },
+      include: {
+        images: {
+          orderBy: { order: "asc" },
+        },
+      },
     });
 
     initialRankings = {
@@ -131,6 +148,8 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         id: item.id,
         title: item.title,
         description: item.description,
+        url: item.url,
+        images: item.images,
         position: item.position,
       })),
     };

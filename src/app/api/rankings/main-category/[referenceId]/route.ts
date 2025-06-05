@@ -15,7 +15,7 @@ export async function PUT(
     }
 
     const userId = (session.user as any).userId;
-    const { position, title, description } = await request.json();
+    const { position, title, description, url } = await request.json();
 
     // 参照の存在確認
     const reference = await prisma.mainCategoryItemReference.findUnique({
@@ -83,13 +83,14 @@ export async function PUT(
       },
     });
 
-    // タイトルと説明を更新する場合は、元のアイテムも更新
-    if (title !== undefined || description !== undefined) {
+    // タイトル、説明、URLを更新する場合は、元のアイテムも更新
+    if (title !== undefined || description !== undefined || url !== undefined) {
       await prisma.rankingItem.update({
         where: { id: reference.rankingItemId },
         data: {
           ...(title !== undefined && { title }),
           ...(description !== undefined && { description }),
+          ...(url !== undefined && { url }),
         },
       });
     }
@@ -98,6 +99,7 @@ export async function PUT(
       id: updatedReference.rankingItem.id,
       title: title || updatedReference.rankingItem.title,
       description: description || updatedReference.rankingItem.description,
+      url: url || updatedReference.rankingItem.url,
       position: updatedReference.position,
       isReference: true,
       referenceId: updatedReference.id,

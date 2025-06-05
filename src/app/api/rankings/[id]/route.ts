@@ -5,9 +5,10 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user || !(session.user as any).userId) {
@@ -15,7 +16,7 @@ export async function PUT(
     }
 
     const userId = (session.user as any).userId;
-    const { title, description, position } = await request.json();
+    const { title, description, url, position } = await request.json();
 
     if (!title) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -23,7 +24,7 @@ export async function PUT(
 
     // アイテムの存在確認と権限チェック
     const existingItem = await prisma.rankingItem.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingItem) {
@@ -50,7 +51,7 @@ export async function PUT(
         ]);
 
         // 新しい位置にアイテムがあるかチェック
-        const directItemAtNewPos = directItems.find(item => item.position === position && item.id !== params.id);
+        const directItemAtNewPos = directItems.find(item => item.position === position && item.id !== id);
         const refAtNewPos = references.find(ref => ref.position === position);
 
         if (directItemAtNewPos) {
@@ -73,7 +74,7 @@ export async function PUT(
           orderBy: { position: 'asc' }
         });
 
-        const itemAtNewPosition = categoryItems.find(item => item.position === position && item.id !== params.id);
+        const itemAtNewPosition = categoryItems.find(item => item.position === position && item.id !== id);
         if (itemAtNewPosition) {
           await prisma.rankingItem.update({
             where: { id: itemAtNewPosition.id },
@@ -85,10 +86,11 @@ export async function PUT(
 
     // アイテムを更新
     const updatedItem = await prisma.rankingItem.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         title,
         description: description || null,
+        url: url || null,
         position: position || null,
       },
       include: {
@@ -113,9 +115,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user || !(session.user as any).userId) {
@@ -126,7 +129,7 @@ export async function DELETE(
 
     // アイテムの存在確認と権限チェック
     const existingItem = await prisma.rankingItem.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         mainCategoryReferences: true,
       },
@@ -147,7 +150,7 @@ export async function DELETE(
       // 参照がある場合は、項目を「削除済み」としてマークする
       // タイトルを「[削除されたアイテム]」に変更し、説明をクリア
       await prisma.rankingItem.update({
-        where: { id: params.id },
+        where: { id },
         data: {
           title: "[削除されたアイテム]",
           description: null,
@@ -158,7 +161,7 @@ export async function DELETE(
     } else {
       // 参照がない場合は通常通り削除
       await prisma.rankingItem.delete({
-        where: { id: params.id },
+        where: { id },
       });
     }
 
