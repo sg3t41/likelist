@@ -118,21 +118,36 @@ export default function UserRankingClient({
   const [draggedItem, setDraggedItem] = useState<{ item: RankingItem; position: number } | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<number | null>(null);
   const [touchDragElement, setTouchDragElement] = useState<HTMLElement | null>(null);
-  const [touchStartY, setTouchStartY] = useState<number>(0);
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [touchStartPosition, setTouchStartPosition] = useState<{ x: number; y: number } | null>(null);
 
   // 緊急時のドラッグ状態リセット関数
   const resetDragState = () => {
     setDraggedItem(null);
     setDragOverPosition(null);
+    setIsDragging(false);
+    setTouchStartPosition(null);
+    
     if (longPressTimer) {
       clearTimeout(longPressTimer);
       setLongPressTimer(null);
     }
-    if (touchDragElement && document.body.contains(touchDragElement)) {
-      document.body.removeChild(touchDragElement);
+    
+    if (touchDragElement) {
+      try {
+        if (document.body.contains(touchDragElement)) {
+          document.body.removeChild(touchDragElement);
+        }
+      } catch (error) {
+        console.warn('Failed to remove touch drag element:', error);
+      }
       setTouchDragElement(null);
     }
+    
+    // body のスクロール制御を解除
+    document.body.style.overflow = '';
+    document.body.style.touchAction = '';
   };
 
   const updateURL = (params: Record<string, string>) => {
@@ -588,34 +603,51 @@ export default function UserRankingClient({
     setDragOverPosition(null);
   };
 
-  // タッチイベントのハンドラー
+  // タッチイベントのハンドラー（改善版）
   const handleTouchStart = (e: React.TouchEvent, item: RankingItem, position: number) => {
-    const touch = e.touches[0];
-    setTouchStartY(touch.clientY);
+    // 既にドラッグ中またはオーナーでない場合は何もしない
+    if (isDragging || !isOwner || item.isDeleted) {
+      return;
+    }
     
-    // 長押しでドラッグ開始
+    const touch = e.touches[0];
+    setTouchStartPosition({ x: touch.clientX, y: touch.clientY });
+    
+    // 長押しタイマーを設定（300ms）
     const timer = setTimeout(() => {
+      // 長押し成功 → ドラッグモード開始
+      setIsDragging(true);
       setDraggedItem({ item, position });
+      
+      // スクロールを一時的に無効化
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
       
       // ドラッグ中の要素を作成
       const element = e.currentTarget as HTMLElement;
+      const rect = element.getBoundingClientRect();
       const clone = element.cloneNode(true) as HTMLElement;
+      
       clone.style.position = 'fixed';
-      clone.style.top = `${touch.clientY - 40}px`;
-      clone.style.left = '10px';
-      clone.style.right = '10px';
-      clone.style.zIndex = '1000';
-      clone.style.opacity = '0.8';
+      clone.style.top = `${touch.clientY - rect.height / 2}px`;
+      clone.style.left = `${Math.max(10, Math.min(touch.clientX - rect.width / 2, window.innerWidth - rect.width - 10))}px`;
+      clone.style.width = `${rect.width - 20}px`;
+      clone.style.zIndex = '9999';
+      clone.style.opacity = '0.9';
       clone.style.pointerEvents = 'none';
-      clone.classList.add('shadow-lg');
+      clone.style.transform = 'rotate(2deg) scale(1.05)';
+      clone.style.boxShadow = '0 10px 25px rgba(0,0,0,0.3)';
+      clone.style.borderRadius = '8px';
+      clone.classList.add('touch-drag-clone');
+      
       document.body.appendChild(clone);
       setTouchDragElement(clone);
       
-      // 振動フィードバック（対応デバイスのみ）
+      // 振動フィードバック
       if ('vibrate' in navigator) {
         navigator.vibrate(50);
       }
-    }, 300); // 300ms長押し
+    }, 300);
     
     setLongPressTimer(timer);
   };
@@ -623,31 +655,45 @@ export default function UserRankingClient({
   const handleTouchMove = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     
-    // ドラッグ中でない場合
-    if (!draggedItem) {
-      // 長押しタイマー中に移動した場合、タイマーをキャンセル（通常のスクロール）
-      if (longPressTimer && Math.abs(touch.clientY - touchStartY) > 10) {
+    // 長押し判定中の場合
+    if (longPressTimer && touchStartPosition) {
+      const deltaX = Math.abs(touch.clientX - touchStartPosition.x);
+      const deltaY = Math.abs(touch.clientY - touchStartPosition.y);
+      
+      // 移動量が閾値を超えたら長押しをキャンセル（通常のスクロールとして扱う）
+      if (deltaX > 15 || deltaY > 15) {
         clearTimeout(longPressTimer);
         setLongPressTimer(null);
+        setTouchStartPosition(null);
       }
-      // 通常のスクロールを許可するため、何もしない
+      // この時点では preventDefault しない → 通常のスクロールが可能
       return;
     }
     
-    // ドラッグ中の場合のみpreventDefaultを呼ぶ
+    // ドラッグ中でない場合は何もしない（通常のスクロールを許可）
+    if (!isDragging || !draggedItem || !touchDragElement) {
+      return;
+    }
+    
+    // ドラッグ中の場合のみ preventDefault
     e.preventDefault();
     e.stopPropagation();
     
     // ドラッグ要素を移動
-    if (touchDragElement) {
-      touchDragElement.style.top = `${touch.clientY - 40}px`;
-      
-      // タッチ位置の要素を取得
-      const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-      if (elementBelow) {
-        const rankingItem = elementBelow.closest('[id^="ranking-item-"]');
-        if (rankingItem) {
-          const position = parseInt(rankingItem.id.split('-')[2]);
+    const rect = touchDragElement.getBoundingClientRect();
+    touchDragElement.style.top = `${touch.clientY - rect.height / 2}px`;
+    touchDragElement.style.left = `${Math.max(10, Math.min(touch.clientX - rect.width / 2, window.innerWidth - rect.width - 10))}px`;
+    
+    // ドロップ位置を判定
+    touchDragElement.style.display = 'none';
+    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+    touchDragElement.style.display = 'block';
+    
+    if (elementBelow) {
+      const rankingItem = elementBelow.closest('[id^="ranking-item-"]');
+      if (rankingItem) {
+        const position = parseInt(rankingItem.id.split('-')[2]);
+        if (!isNaN(position) && position !== dragOverPosition) {
           setDragOverPosition(position);
         }
       }
@@ -655,38 +701,29 @@ export default function UserRankingClient({
   };
 
   const handleTouchEnd = async (e: React.TouchEvent) => {
-    // ドラッグ中の場合のみイベントを処理
-    if (draggedItem) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    
     // 長押しタイマーをクリア
     if (longPressTimer) {
       clearTimeout(longPressTimer);
       setLongPressTimer(null);
     }
     
-    // ドラッグ要素を削除
-    if (touchDragElement) {
-      try {
-        if (document.body.contains(touchDragElement)) {
-          document.body.removeChild(touchDragElement);
+    // ドラッグ中だった場合の処理
+    if (isDragging && draggedItem) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // 位置変更処理
+      if (dragOverPosition && draggedItem.position !== dragOverPosition) {
+        try {
+          await handlePositionChange(draggedItem.item, dragOverPosition);
+        } catch (error) {
+          console.error('Failed to change position:', error);
         }
-      } catch (error) {
-        console.warn('Failed to remove touch drag element:', error);
       }
-      setTouchDragElement(null);
     }
     
-    // 位置変更処理
-    if (draggedItem && dragOverPosition && draggedItem.position !== dragOverPosition) {
-      await handlePositionChange(draggedItem.item, dragOverPosition);
-    }
-    
-    // ドラッグ状態をクリア
-    setDraggedItem(null);
-    setDragOverPosition(null);
+    // 状態をリセット
+    resetDragState();
   };
 
   // 初期ハイライトのタイマー処理
@@ -728,29 +765,23 @@ export default function UserRankingClient({
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // ページが非表示になった時にドラッグ状態をリセット
         resetDragState();
       }
     };
 
-    // スクロールが無効になった場合の緊急リセット
-    const handleTouchStart = () => {
-      if (draggedItem && !touchDragElement) {
-        // ドラッグ状態なのにドラッグ要素がない場合はリセット
-        resetDragState();
-      }
+    const handleOrientationChange = () => {
+      resetDragState();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('orientationchange', handleOrientationChange);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      document.removeEventListener('touchstart', handleTouchStart);
-      // コンポーネントアンマウント時に確実にドラッグ状態をリセット
+      window.removeEventListener('orientationchange', handleOrientationChange);
       resetDragState();
     };
-  }, [draggedItem, longPressTimer, touchDragElement, resetDragState]);
+  }, []);
 
   // グローバルなスクロール防止は削除
   // ドラッグ中のスクロール防止は各タッチイベントハンドラー内で個別に処理
@@ -1140,8 +1171,8 @@ export default function UserRankingClient({
                       onDrop={(e) => handleDrop(e, position)}
                       onDragEnd={handleDragEnd}
                       onTouchStart={(e) => item && isOwner && !item.isDeleted && handleTouchStart(e, item, position)}
-                      onTouchMove={(e) => item && isOwner && !item.isDeleted && handleTouchMove(e)}
-                      onTouchEnd={(e) => handleTouchEnd(e)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
                     >
                       <div className="flex items-center space-x-4 flex-1">
                         <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
