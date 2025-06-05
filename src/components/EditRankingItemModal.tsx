@@ -24,15 +24,12 @@ export default function EditRankingItemModal({
 }: EditRankingItemModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [targetPosition, setTargetPosition] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [showPositionDropdown, setShowPositionDropdown] = useState(false);
 
   useEffect(() => {
     if (item) {
       setTitle(item.title);
       setDescription(item.description || "");
-      setTargetPosition(item.position || 1);
     }
   }, [item]);
 
@@ -46,7 +43,7 @@ export default function EditRankingItemModal({
 
     setIsLoading(true);
     try {
-      await onSave(item.id, title, description, targetPosition);
+      await onSave(item.id, title, description);
       onClose();
     } catch (error) {
       console.error("Error editing ranking item:", error);
@@ -89,32 +86,6 @@ export default function EditRankingItemModal({
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="説明を入力（任意）"
             />
-          </div>
-
-          <div className="mb-4">
-            <button
-              type="button"
-              onClick={() => setShowPositionDropdown(!showPositionDropdown)}
-              className="w-full px-4 py-2 text-left bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            >
-              順位を変更する
-            </button>
-            
-            {showPositionDropdown && (
-              <div className="mt-2">
-                <select
-                  value={targetPosition}
-                  onChange={(e) => setTargetPosition(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  {Array.from({ length: 11 }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      {i + 1}位
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
 
           <div className="flex gap-2 justify-end">

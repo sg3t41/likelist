@@ -1160,24 +1160,12 @@ export default function UserRankingClient({
                       // タッチイベントハンドラーを完全に削除
                     >
                       <div className="flex items-center space-x-4 flex-1">
-                        {/* クリック可能なランキング番号 */}
-                        <button
-                          onClick={() => {
-                            if (item && isOwner && !item.isDeleted) {
-                              setSelectedItemForMove({ item, position });
-                            }
-                          }}
-                          className={`flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center ${
-                            item && isOwner && !item.isDeleted 
-                              ? 'hover:bg-blue-200 dark:hover:bg-blue-800 cursor-pointer ring-2 ring-transparent hover:ring-blue-300 transition-all' 
-                              : ''
-                          }`}
-                          title={item && isOwner && !item.isDeleted ? "クリックして順位を変更" : ""}
-                        >
+                        {/* ランキング番号（クリック不可） */}
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
                           <span className="text-sm font-bold text-blue-600 dark:text-blue-300">
                             {index + 1}
                           </span>
-                        </button>
+                        </div>
                         
                         {/* コンテンツ部分：完全にスクロール可能 */}
                         <div className="flex-1 min-w-0">
@@ -1214,13 +1202,6 @@ export default function UserRankingClient({
                               {item.sourceSubCategoryName} {position}位
                             </button>
                           )}
-                          
-                          {/* 移動可能な場合のヒント */}
-                          {item && isOwner && !item.isDeleted && (
-                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                              📝 番号をタップして順位変更
-                            </p>
-                          )}
                         </div>
                       </div>
 
@@ -1245,19 +1226,33 @@ export default function UserRankingClient({
                                 {isOwner && (
                                   <>
                                     {!item.isDeleted && (
-                                      <button
-                                        onClick={() => {
-                                          setSelectedItemForEdit(item);
-                                          setIsEditRankingItemModalOpen(true);
-                                          setOpenItemMenuId(null);
-                                        }}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                      >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                        編集
-                                      </button>
+                                      <>
+                                        <button
+                                          onClick={() => {
+                                            setSelectedItemForEdit(item);
+                                            setIsEditRankingItemModalOpen(true);
+                                            setOpenItemMenuId(null);
+                                          }}
+                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                        >
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                          </svg>
+                                          編集
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            setSelectedItemForMove({ item, position });
+                                            setOpenItemMenuId(null);
+                                          }}
+                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                        >
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                          </svg>
+                                          順位を変更
+                                        </button>
+                                      </>
                                     )}
                                     <button
                                       onClick={() => {
