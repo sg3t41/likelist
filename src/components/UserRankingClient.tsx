@@ -115,40 +115,8 @@ export default function UserRankingClient({
   const [editingTitle, setEditingTitle] = useState("");
   const [isRankingMenuOpen, setIsRankingMenuOpen] = useState(false);
   const [openItemMenuId, setOpenItemMenuId] = useState<string | null>(null);
-  const [draggedItem, setDraggedItem] = useState<{ item: RankingItem; position: number } | null>(null);
-  const [dragOverPosition, setDragOverPosition] = useState<number | null>(null);
-  const [touchDragElement, setTouchDragElement] = useState<HTMLElement | null>(null);
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [touchStartPosition, setTouchStartPosition] = useState<{ x: number; y: number } | null>(null);
+  const [selectedItemForMove, setSelectedItemForMove] = useState<{item: RankingItem, position: number} | null>(null);
 
-  // 緊急時のドラッグ状態リセット関数
-  const resetDragState = () => {
-    setDraggedItem(null);
-    setDragOverPosition(null);
-    setIsDragging(false);
-    setTouchStartPosition(null);
-    
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
-    
-    if (touchDragElement) {
-      try {
-        if (document.body.contains(touchDragElement)) {
-          document.body.removeChild(touchDragElement);
-        }
-      } catch (error) {
-        console.warn('Failed to remove touch drag element:', error);
-      }
-      setTouchDragElement(null);
-    }
-    
-    // body のスクロール制御を解除
-    document.body.style.overflow = '';
-    document.body.style.touchAction = '';
-  };
 
   const updateURL = (params: Record<string, string>) => {
     const newParams = new URLSearchParams();
@@ -581,27 +549,6 @@ export default function UserRankingClient({
     setDragOverPosition(null);
   };
 
-  const handleDrop = async (e: React.DragEvent, dropPosition: number) => {
-    e.preventDefault();
-    setDragOverPosition(null);
-
-    console.log("handleDrop:", { draggedItem, dropPosition });
-
-    if (!draggedItem || draggedItem.position === dropPosition) {
-      setDraggedItem(null);
-      return;
-    }
-
-    // 順位を入れ替える
-    console.log("Changing position from", draggedItem.position, "to", dropPosition);
-    await handlePositionChange(draggedItem.item, dropPosition);
-    setDraggedItem(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedItem(null);
-    setDragOverPosition(null);
-  };
 
   // タッチイベントのハンドラー（改善版）
   const handleTouchStart = (e: React.TouchEvent, item: RankingItem, position: number) => {
@@ -733,6 +680,58 @@ export default function UserRankingClient({
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // 順位選択モーダルコンポーネント
+  const PositionSelectModal = ({ isOpen, onClose, item, currentPosition, onMove }: {
+    isOpen: boolean;
+    onClose: () => void;
+    item: RankingItem;
+    currentPosition: number;
+    onMove: (newPosition: number) => void;
+  }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4">
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            順位を選択
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            「{item.title}」の新しい順位を選択してください
+          </p>
+          
+          <div className="grid grid-cols-4 gap-2 mb-6">
+            {Array.from({ length: 11 }, (_, i) => i + 1).map((pos) => (
+              <button
+                key={pos}
+                onClick={() => {
+                  onMove(pos);
+                  onClose();
+                }}
+                className={`p-3 rounded-md text-center font-medium transition-colors ${
+                  pos === currentPosition
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {pos}
+              </button>
+            ))}
+          </div>
+          
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // ハイライト位置が変更されたらスクロール
   useEffect(() => {
@@ -1156,30 +1155,31 @@ export default function UserRankingClient({
                       className={`px-6 py-4 flex items-center justify-between transition-all duration-300 ${
                         highlightPosition === index + 1
                           ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-inset ring-blue-500 dark:ring-blue-400'
-                          : dragOverPosition === position
-                          ? 'bg-gray-100 dark:bg-gray-700 border-2 border-dashed border-blue-500'
                           : ''
-                      } ${item && isOwner && !item.isDeleted ? 'cursor-move touch-none' : ''} ${
-                        draggedItem?.position === position ? 'opacity-50' : ''
-                      } ${
-                        draggedItem && !touchDragElement && draggedItem.position === position ? 'scale-105' : ''
                       }`}
-                      draggable={!!(item && isOwner && !item.isDeleted)}
-                      onDragStart={(e) => item && !item.isDeleted && handleDragStart(e, item, position)}
-                      onDragOver={(e) => handleDragOver(e, position)}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, position)}
-                      onDragEnd={handleDragEnd}
-                      onTouchStart={(e) => item && isOwner && !item.isDeleted && handleTouchStart(e, item, position)}
-                      onTouchMove={handleTouchMove}
-                      onTouchEnd={handleTouchEnd}
+                      // タッチイベントハンドラーを完全に削除
                     >
                       <div className="flex items-center space-x-4 flex-1">
-                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                        {/* クリック可能なランキング番号 */}
+                        <button
+                          onClick={() => {
+                            if (item && isOwner && !item.isDeleted) {
+                              setSelectedItemForMove({ item, position });
+                            }
+                          }}
+                          className={`flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center ${
+                            item && isOwner && !item.isDeleted 
+                              ? 'hover:bg-blue-200 dark:hover:bg-blue-800 cursor-pointer ring-2 ring-transparent hover:ring-blue-300 transition-all' 
+                              : ''
+                          }`}
+                          title={item && isOwner && !item.isDeleted ? "クリックして順位を変更" : ""}
+                        >
                           <span className="text-sm font-bold text-blue-600 dark:text-blue-300">
                             {index + 1}
                           </span>
-                        </div>
+                        </button>
+                        
+                        {/* コンテンツ部分：完全にスクロール可能 */}
                         <div className="flex-1 min-w-0">
                           <h3 className={`text-lg font-medium truncate ${
                             item?.isDeleted 
@@ -1211,8 +1211,15 @@ export default function UserRankingClient({
                               }}
                               className="text-xs text-blue-600 dark:text-blue-400 mt-1 hover:text-blue-700 dark:hover:text-blue-300 hover:underline"
                             >
-{item.sourceSubCategoryName} {position}位
+                              {item.sourceSubCategoryName} {position}位
                             </button>
+                          )}
+                          
+                          {/* 移動可能な場合のヒント */}
+                          {item && isOwner && !item.isDeleted && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                              📝 番号をタップして順位変更
+                            </p>
                           )}
                         </div>
                       </div>
@@ -1461,6 +1468,20 @@ export default function UserRankingClient({
           item={selectedItemForEdit}
           totalItems={Object.keys(isMainCategoryView ? rankings[`main_${selectedMainCategoryId}`] || {} : rankings[selectedCategory] || {}).length}
           onSave={handleEditItem}
+        />
+      )}
+
+      {/* 順位選択モーダル */}
+      {selectedItemForMove && (
+        <PositionSelectModal
+          isOpen={!!selectedItemForMove}
+          onClose={() => setSelectedItemForMove(null)}
+          item={selectedItemForMove.item}
+          currentPosition={selectedItemForMove.position}
+          onMove={(newPosition) => {
+            handlePositionChange(selectedItemForMove.item, newPosition);
+            setSelectedItemForMove(null);
+          }}
         />
       )}
     </div>
