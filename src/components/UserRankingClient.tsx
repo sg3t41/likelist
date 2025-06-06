@@ -8,6 +8,7 @@ import AddRankingItemModal from "@/components/AddRankingItemModal";
 import EditRankingItemModal from "@/components/EditRankingItemModal";
 import UserRankingHeader from "@/components/UserRankingHeader";
 import ImageModal from "@/components/ImageModal";
+import RankingSkeleton from "@/components/RankingSkeleton";
 
 type PageUser = {
   id: string;
@@ -97,7 +98,10 @@ export default function UserRankingClient({
     return rankings;
   };
   
-  const [rankings, setRankings] = useState<Rankings>(getInitialRankings());
+  const [rankings, setRankings] = useState<Rankings>(() => {
+    // 初期化時により確実にデータを設定
+    return getInitialRankings();
+  });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [isAddSubCategoryModalOpen, setIsAddSubCategoryModalOpen] = useState(false);
@@ -131,6 +135,92 @@ export default function UserRankingClient({
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [touchDragElement, setTouchDragElement] = useState<HTMLElement | null>(null);
   const [selectedImageModal, setSelectedImageModal] = useState<{url: string, alt: string} | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 初期データの同期処理
+  useEffect(() => {
+    if (serverInitialRankings && serverInitialRankings.items.length > 0) {
+      const rankingMap: RankingMap = {};
+      serverInitialRankings.items.forEach((item: any) => {
+        rankingMap[item.position] = item;
+      });
+      
+      const key = serverInitialRankings.type === 'main' 
+        ? `main_${serverInitialRankings.categoryId}`
+        : serverInitialRankings.categoryName;
+      
+      // 既存のデータがない場合のみ設定
+      setRankings(prev => {
+        if (!prev[key] || Object.keys(prev[key]).length === 0) {
+          return { ...prev, [key]: rankingMap };
+        }
+        return prev;
+      });
+    }
+  }, [serverInitialRankings]);
+
+  // タイトル編集関数
+  const handleSaveTitle = async () => {
+    if (!editingTitle.trim()) {
+      alert("タイトルを入力してください");
+      return;
+    }
+
+    try {
+      if (isMainCategoryView && selectedMainCategoryId) {
+        // 大カテゴリのタイトル編集
+        const response = await fetch(`/api/categories/${selectedMainCategoryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: editingTitle.trim() }),
+        });
+
+        if (response.ok) {
+          // カテゴリリストを再取得
+          const res = await fetch(`/api/categories?userId=${pageUser.id}`);
+          if (res.ok) {
+            const data = await res.json();
+            setAllCategories(data.userCategories || []);
+          }
+          
+          setSelectedMainCategory(editingTitle.trim());
+          setIsEditingTitle(false);
+        } else {
+          const errorData = await response.json();
+          alert(`タイトルの更新に失敗しました: ${errorData.error || 'Unknown error'}`);
+        }
+      } else if (!isMainCategoryView && selectedSubCategoryId) {
+        // 小カテゴリのタイトル編集
+        const response = await fetch(`/api/subcategories/${selectedSubCategoryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: editingTitle.trim() }),
+        });
+
+        if (response.ok) {
+          // カテゴリリストを再取得
+          const res = await fetch(`/api/categories?userId=${pageUser.id}`);
+          if (res.ok) {
+            const data = await res.json();
+            setAllCategories(data.userCategories || []);
+          }
+          
+          setSelectedCategory(editingTitle.trim());
+          setIsEditingTitle(false);
+        } else {
+          const errorData = await response.json();
+          alert(`タイトルの更新に失敗しました: ${errorData.error || 'Unknown error'}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating title:", error);
+      alert("タイトルの更新に失敗しました");
+    }
+  };
 
   // Reset drag state function
   const resetDragState = () => {
@@ -1127,7 +1217,11 @@ export default function UserRankingClient({
           </div>
 
           <div className="flex-1">
-            {!selectedCategory && !isMainCategoryView ? (
+            {isLoading ? (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <RankingSkeleton />
+              </div>
+            ) : !selectedCategory && !isMainCategoryView ? (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                   カテゴリを選択してください
@@ -1148,7 +1242,7 @@ export default function UserRankingClient({
                         onChange={(e) => setEditingTitle(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
-                            // handleSaveTitle();
+                            handleSaveTitle();
                           }
                           if (e.key === 'Escape') setIsEditingTitle(false);
                         }}
@@ -1157,7 +1251,7 @@ export default function UserRankingClient({
                       />
                       <button
                         onClick={() => {
-                          // handleSaveTitle();
+                          handleSaveTitle();
                         }}
                         className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
                       >
@@ -1233,6 +1327,27 @@ export default function UserRankingClient({
                               <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                               <button
                                 onClick={() => {
+                                  const currentTitle = isMainCategoryView 
+                                    ? selectedMainCategory 
+                                    : selectedCategory;
+                                  setEditingTitle(currentTitle);
+                                  setIsEditingTitle(true);
+                                  setIsRankingMenuOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                タイトルを編集
+                              </button>
+                            </>
+                          )}
+                          {isOwner && (
+                            <>
+                              <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                              <button
+                                onClick={() => {
                                   // 現在選択されているカテゴリの情報を取得
                                   if (isMainCategoryView) {
                                     const mainCat = allCategories.find(cat => cat.id === selectedMainCategoryId);
@@ -1279,11 +1394,30 @@ export default function UserRankingClient({
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
                 {Array.from({ length: 11 }, (_, index) => {
                   const position = index + 1;
-                  const currentRankings = isMainCategoryView 
-                    ? rankings[`main_${selectedMainCategoryId}`] || {}
-                    : rankings[selectedCategory] || {};
                   
-                  // 順位に対応するアイテムを取得
+                  // より確実なデータ取得
+                  const getCurrentRankings = () => {
+                    if (isMainCategoryView && selectedMainCategoryId) {
+                      return rankings[`main_${selectedMainCategoryId}`] || {};
+                    } else if (!isMainCategoryView && selectedCategory) {
+                      return rankings[selectedCategory] || {};
+                    }
+                    
+                    // フォールバック：serverInitialRankingsから直接取得
+                    if (serverInitialRankings && 
+                        ((isMainCategoryView && serverInitialRankings.categoryId === selectedMainCategoryId) ||
+                         (!isMainCategoryView && serverInitialRankings.categoryName === selectedCategory))) {
+                      const rankingMap: RankingMap = {};
+                      serverInitialRankings.items.forEach((item: any) => {
+                        rankingMap[item.position] = item;
+                      });
+                      return rankingMap;
+                    }
+                    
+                    return {};
+                  };
+                  
+                  const currentRankings = getCurrentRankings();
                   const item = currentRankings[position];
                   
                   return (
@@ -1569,7 +1703,7 @@ export default function UserRankingClient({
           categoryName={isMainCategoryView ? selectedMainCategory : selectedCategory}
           isMainCategoryView={isMainCategoryView}
           subCategories={isMainCategoryView ? allCategories.find(cat => cat.id === selectedMainCategoryId)?.subCategories : undefined}
-          onAdd={async (title: string, description: string, url?: string, subCategoryId?: string, existingItemId?: string) => {
+          onAdd={async (title: string, description: string, url?: string, subCategoryId?: string, existingItemId?: string, imageUrl?: string) => {
             console.log("onAdd called with:", { title, description, url, subCategoryId, existingItemId, targetPosition, isMainCategoryView, selectedMainCategoryId, selectedSubCategoryId });
             
             const requestBody = {
@@ -1596,6 +1730,31 @@ export default function UserRankingClient({
               console.log("API response status:", response.status);
               if (response.ok) {
                 console.log("API call successful, refreshing rankings");
+                
+                // 画像が指定されている場合は保存
+                if (imageUrl && imageUrl.trim() && !existingItemId) {
+                  const responseData = await response.json();
+                  const newItemId = responseData.id;
+                  
+                  if (newItemId) {
+                    try {
+                      const imageResponse = await fetch(`/api/rankings/${newItemId}/images`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ images: [imageUrl.trim()] }),
+                      });
+                      
+                      if (!imageResponse.ok) {
+                        console.error('Failed to save image:', await imageResponse.text());
+                      }
+                    } catch (imageError) {
+                      console.error('Error saving image:', imageError);
+                    }
+                  }
+                }
+                
                 // ランキングを再取得
                 if (isMainCategoryView) {
                   fetchMainCategoryRankings(selectedMainCategoryId);

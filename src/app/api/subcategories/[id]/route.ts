@@ -5,9 +5,10 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user || !(session.user as any).userId) {
@@ -18,7 +19,7 @@ export async function DELETE(
 
     // サブカテゴリの存在確認と権限チェック
     const existingSubCategory = await prisma.subCategory.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         rankingItems: true,
       },
@@ -34,7 +35,7 @@ export async function DELETE(
 
     // サブカテゴリを削除（関連するランキングアイテムも自動的に削除される）
     await prisma.subCategory.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "SubCategory deleted successfully" });
@@ -44,11 +45,12 @@ export async function DELETE(
   }
 }
 
-export async function PATCH(
+export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user || !(session.user as any).userId) {
@@ -60,7 +62,7 @@ export async function PATCH(
 
     // サブカテゴリの存在確認と権限チェック
     const existingSubCategory = await prisma.subCategory.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingSubCategory) {
@@ -73,7 +75,48 @@ export async function PATCH(
 
     // サブカテゴリ名を更新
     const updatedSubCategory = await prisma.subCategory.update({
-      where: { id: params.id },
+      where: { id },
+      data: { name: body.name },
+    });
+
+    return NextResponse.json(updatedSubCategory);
+  } catch (error) {
+    console.error("Error updating subcategory:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user || !(session.user as any).userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = (session.user as any).userId;
+    const body = await request.json();
+
+    // サブカテゴリの存在確認と権限チェック
+    const existingSubCategory = await prisma.subCategory.findUnique({
+      where: { id },
+    });
+
+    if (!existingSubCategory) {
+      return NextResponse.json({ error: "SubCategory not found" }, { status: 404 });
+    }
+
+    if (existingSubCategory.userId !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // サブカテゴリ名を更新
+    const updatedSubCategory = await prisma.subCategory.update({
+      where: { id },
       data: { name: body.name },
     });
 

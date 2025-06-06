@@ -14,6 +14,7 @@ interface AddRankingItemModalProps {
     url?: string,
     subCategoryId?: string,
     existingItemId?: string,
+    imageUrl?: string,
   ) => Promise<void>;
 }
 
@@ -28,6 +29,7 @@ export default function AddRankingItemModal({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [addMode, setAddMode] = useState<"direct" | "subcategory" | "existing">(
     "direct",
   );
@@ -99,12 +101,13 @@ export default function AddRankingItemModal({
         await onAdd("", "", "", selectedSubCategoryId, selectedExistingItemId);
       } else {
         // 新規項目追加（大カテゴリ直接 or 小カテゴリ）
-        await onAdd(title, description, url);
+        await onAdd(title, description, url, undefined, undefined, imageUrl);
       }
 
       setTitle("");
       setDescription("");
       setUrl("");
+      setImageUrl("");
       setSelectedSubCategoryId("");
       setSelectedExistingItemId("");
       setExistingItems([]);
@@ -272,6 +275,31 @@ export default function AddRankingItemModal({
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="https://example.com"
                 />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                  画像リンク（任意）
+                </label>
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="https://example.com/image.jpg"
+                />
+                {imageUrl && (
+                  <div className="mt-2">
+                    <img
+                      src={imageUrl}
+                      alt="プレビュー"
+                      className="w-32 h-32 object-cover rounded border border-gray-300 dark:border-gray-600"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </>
           )}
