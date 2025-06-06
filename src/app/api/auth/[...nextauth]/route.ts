@@ -118,39 +118,48 @@ export const authOptions: NextAuthOptions = {
         token.accessTokenExpires = account.expires_at ? account.expires_at * 1000 : Date.now() + 90 * 24 * 60 * 60 * 1000; // 90日後（長期保持）
         
         if (username) {
-          try {
-            const dbUser = await prisma.user.findUnique({
-              where: { username },
-            });
-            if (dbUser) {
-              token.userId = dbUser.id;
+          // リトライロジックで確実にuserIdを取得
+          let retries = 3;
+          while (retries > 0) {
+            try {
+              const dbUser = await prisma.user.findUnique({
+                where: { username },
+              });
+              if (dbUser) {
+                token.userId = dbUser.id;
+                console.log(`JWT callback: userId set to ${dbUser.id} for username ${username}`);
+                break;
+              } else {
+                // ユーザーが見つからない場合、短時間待ってリトライ（DBの書き込み待ち）
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries--;
+              }
+            } catch (error) {
+              retries--;
+              console.error(`Error fetching user in JWT callback (retries left: ${retries}):`, error);
+              if (retries > 0) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+              }
             }
-          } catch (error) {
-            console.error("Error fetching user in JWT callback:", error);
           }
         }
-      } else if (token.username && !token.userId) {
-        // This runs on subsequent requests when we have username but no userId
-        // This handles the case where the user exists but userId wasn't set in the token
+      }
+      
+      // 既存のトークンでuserIdがない場合の処理
+      if (token.username && !token.userId) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { username: token.username as string },
           });
           if (dbUser) {
             token.userId = dbUser.id;
+            console.log(`JWT callback: userId recovered for username ${token.username}`);
           }
         } catch (error) {
           console.error("Error fetching user by username in JWT callback:", error);
         }
       }
       
-      // Twitter JWTトークンは長期保持するため、期限切れチェックを簡素化
-      // ユーザー情報があれば常にトークンを返す
-      if (token.userId && token.username) {
-        return token;
-      }
-      
-      // ユーザー情報がない場合のみ再認証が必要
       return token;
     },
     async session({ session, token }) {
