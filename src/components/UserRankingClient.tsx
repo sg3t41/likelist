@@ -7,6 +7,7 @@ import AddSubCategoryModal from "@/components/AddSubCategoryModal";
 import AddRankingItemModal from "@/components/AddRankingItemModal";
 import EditRankingItemModal from "@/components/EditRankingItemModal";
 import UserRankingHeader from "@/components/UserRankingHeader";
+import ImageModal from "@/components/ImageModal";
 
 type PageUser = {
   id: string;
@@ -129,6 +130,7 @@ export default function UserRankingClient({
   const [touchStartPosition, setTouchStartPosition] = useState<{x: number, y: number} | null>(null);
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [touchDragElement, setTouchDragElement] = useState<HTMLElement | null>(null);
+  const [selectedImageModal, setSelectedImageModal] = useState<{url: string, alt: string} | null>(null);
 
   // Reset drag state function
   const resetDragState = () => {
@@ -1354,34 +1356,20 @@ export default function UserRankingClient({
                             </button>
                           )}
                           {item?.images && item.images.length > 0 && !item?.isDeleted && (
-                            <div className={`mt-2 gap-2 ${
-                              item.images.length === 1 
-                                ? 'flex justify-start' 
-                                : item.images.length === 2 
-                                ? 'grid grid-cols-2' 
-                                : item.images.length === 3
-                                ? 'grid grid-cols-3'
-                                : 'grid grid-cols-2'
-                            }`}>
-                              {item.images.map((image, idx) => (
+                            <div className="mt-2">
+                              <div 
+                                className="relative overflow-hidden rounded-md border border-gray-200 dark:border-gray-700 w-32 h-32 cursor-pointer hover:opacity-90 transition-opacity"
+                                onClick={() => setSelectedImageModal({url: item.images[0].url, alt: `${item.title} - 画像`})}
+                              >
                                 <img
-                                  key={image.id}
-                                  src={image.url}
-                                  alt={`${item.title} - 画像${idx + 1}`}
-                                  className={`rounded-md border border-gray-200 dark:border-gray-700 object-cover ${
-                                    item.images.length === 1 
-                                      ? 'w-32 h-32' 
-                                      : item.images.length === 2 
-                                      ? 'w-full h-24' 
-                                      : item.images.length === 3
-                                      ? 'w-full h-20'
-                                      : 'w-full h-20'
-                                  }`}
+                                  src={item.images[0].url}
+                                  alt={`${item.title} - 画像`}
+                                  className="w-full h-full object-cover"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
                                   }}
                                 />
-                              ))}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -1669,6 +1657,16 @@ export default function UserRankingClient({
 
       {/* カテゴリ削除確認モーダル */}
       <DeleteCategoryModal />
+
+      {/* 画像モーダル */}
+      {selectedImageModal && (
+        <ImageModal
+          isOpen={!!selectedImageModal}
+          onClose={() => setSelectedImageModal(null)}
+          imageUrl={selectedImageModal.url}
+          alt={selectedImageModal.alt}
+        />
+      )}
     </div>
   );
 }

@@ -41,6 +41,10 @@ export default function EditRankingItemModal({
   }, [item]);
 
   const addImageUrl = () => {
+    if (imageUrls.length >= 1) {
+      alert("画像は1枚まで追加できます");
+      return;
+    }
     setImageUrls([...imageUrls, ""]);
   };
 
@@ -65,8 +69,6 @@ export default function EditRankingItemModal({
 
     setIsLoading(true);
     try {
-      await onSave(item.id, title, description, url);
-      
       // 画像を更新（空の配列でも送信して既存画像をクリア）
       setIsSavingImages(true);
       const validUrls = imageUrls.filter(url => url.trim());
@@ -83,6 +85,9 @@ export default function EditRankingItemModal({
         console.error('Failed to update images:', errorData);
         throw new Error('画像の更新に失敗しました');
       }
+      
+      // タイトル、説明、URLを保存（これにより再取得がトリガーされる）
+      await onSave(item.id, title, description, url);
       
       onClose();
     } catch (error) {
@@ -150,9 +155,10 @@ export default function EditRankingItemModal({
               <button
                 type="button"
                 onClick={addImageUrl}
-                className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                disabled={imageUrls.length >= 1}
               >
-                画像を追加
+                画像を追加 {imageUrls.length > 0 && `(${imageUrls.length}/1)`}
               </button>
             </div>
             <div className="space-y-2 max-h-48 overflow-y-auto">
