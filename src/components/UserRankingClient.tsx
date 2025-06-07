@@ -8,6 +8,7 @@ import AddSubCategoryModal from "@/components/AddSubCategoryModal";
 import AddRankingItemModal from "@/components/AddRankingItemModal";
 import EditRankingItemModal from "@/components/EditRankingItemModal";
 import UserRankingHeader from "@/components/UserRankingHeader";
+import UserProfileSection from "@/components/UserProfileSection";
 import ImageModal from "@/components/ImageModal";
 import RankingSkeleton from "@/components/RankingSkeleton";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -1004,15 +1005,6 @@ export default function UserRankingClient({
         setIsMenuOpen={setIsMenuOpen}
       />
 
-      {/* パンくずリスト */}
-      {(selectedCategory || isMainCategoryView) && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-          <Breadcrumb 
-            items={generateBreadcrumbItems()} 
-            className="bg-white/80 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm"
-          />
-        </div>
-      )}
 
       {/* ハンバーガーメニュー */}
       <div
@@ -1159,6 +1151,19 @@ export default function UserRankingClient({
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* ユーザープロフィールセクション */}
+        {!selectedCategory && !isMainCategoryView && (
+          <UserProfileSection 
+            pageUser={pageUser}
+            categoryCount={allCategories.length}
+            itemCount={allCategories.reduce((total, cat) => {
+              return total + (cat.subCategories?.reduce((subTotal: number, sub: any) => {
+                return subTotal + (sub._count?.rankingItems || 0);
+              }, 0) || 0);
+            }, 0)}
+          />
+        )}
+
         <div className="flex gap-8">
           {/* サイドバー（デスクトップ）- ファイラ風デザイン */}
           <div className="hidden lg:block w-80 bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6 h-fit">

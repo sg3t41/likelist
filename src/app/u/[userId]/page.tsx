@@ -256,6 +256,13 @@ export default async function UserPage({ params, searchParams }: PageProps) {
     where: { userId: user.id },
     include: {
       subCategories: {
+        include: {
+          _count: {
+            select: {
+              rankingItems: true,
+            },
+          },
+        },
         orderBy: { createdAt: "asc" },
       },
     },

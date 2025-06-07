@@ -30,13 +30,13 @@ export default function UserRankingHeader({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   return (
-    <header className="bg-gradient-to-r from-gray-50 to-gray-100 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center justify-between">
+    <header className="bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100 sticky top-0 z-40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-white/50 transition-all"
+              className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all"
             >
               <svg
                 className="w-6 h-6"
@@ -52,42 +52,9 @@ export default function UserRankingHeader({
                 />
               </svg>
             </button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 relative">
-                {pageUser.image ? (
-                  <Image
-                    src={pageUser.image}
-                    alt={`@${pageUser.username}`}
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const fallback = target.nextElementSibling as HTMLElement;
-                      if (fallback) fallback.style.display = 'flex';
-                    }}
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {(pageUser.username || pageUser.name || 'U').charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col">
-                <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <span>{pageUser.name || `@${pageUser.username}`} の</span>
-                  <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent font-extrabold" style={{ fontFamily: 'var(--font-fredoka)' }}>
-                    すきなものリスト
-                  </span>
-                </h1>
-                {pageUser.name && (
-                  <p className="text-sm text-gray-500">
-                    @{pageUser.username}
-                  </p>
-                )}
-              </div>
-            </div>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-fredoka)' }}>
+              すきなものリスト
+            </h1>
           </div>
           
           <div className="flex items-center gap-4">
@@ -95,7 +62,7 @@ export default function UserRankingHeader({
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 p-2 rounded-md hover:bg-white/50 transition-all"
+                  className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 transition-all"
                 >
                   {currentUser.image && (
                     <Image
@@ -109,7 +76,7 @@ export default function UserRankingHeader({
                 </button>
                 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
                     <button
                       onClick={() => {
                         router.push(`/u/${currentUser.userId}`);
@@ -131,7 +98,7 @@ export default function UserRankingHeader({
             ) : (
               <button
                 onClick={() => signIn("twitter")}
-                className="px-4 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>

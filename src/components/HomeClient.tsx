@@ -10,14 +10,36 @@ export default function HomeClient({ currentUser }: HomeClientProps) {
   const username = currentUser ? (currentUser as any).username : null;
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center relative overflow-hidden">
-      {/* 背景装飾 */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-pink-300/20 to-purple-300/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-blue-300/20 to-indigo-300/20 rounded-full blur-3xl"></div>
-      </div>
-      
-      <div className="relative max-w-md w-full space-y-8 p-8 bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl">
+    <>
+      {/* シンプルなヘッダー */}
+      <header className="bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-fredoka)' }}>
+              すきなものリスト
+            </h1>
+            
+            {currentUser && username && (
+              <a
+                href={`/u/${(currentUser as any).userId || username}`}
+                className="px-4 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center gap-2"
+              >
+                <span className="text-lg">🏠</span>
+                マイページ
+              </a>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center relative overflow-hidden">
+        {/* 背景装飾 */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-pink-300/20 to-purple-300/20 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-blue-300/20 to-indigo-300/20 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="relative max-w-md w-full space-y-8 p-8 bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl">
         <div className="text-center">
           {/* ロゴ・アイコン部分 */}
           <div className="mx-auto w-20 h-20 mb-6 bg-gradient-to-br from-pink-400 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
@@ -83,16 +105,6 @@ export default function HomeClient({ currentUser }: HomeClientProps) {
             </svg>
             {currentUser ? "再ログイン" : "Xでログインして始める"}
           </button>
-          
-          {currentUser && username && (
-            <a
-              href={`/u/${(currentUser as any).userId || username}`}
-              className="w-full flex justify-center items-center gap-3 px-6 py-4 text-base font-medium rounded-xl text-purple-700 bg-purple-100 hover:bg-purple-200 transform hover:scale-[1.02] transition-all duration-200"
-            >
-              <span className="text-xl">🏠</span>
-              マイページに移動
-            </a>
-          )}
         </div>
         
         {/* フッター的な装飾 */}
@@ -101,7 +113,8 @@ export default function HomeClient({ currentUser }: HomeClientProps) {
             好きなものを、もっと楽しく整理しよう
           </p>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
