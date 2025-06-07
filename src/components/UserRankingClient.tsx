@@ -255,6 +255,7 @@ export default function UserRankingClient({
     setSelectedSubCategoryId(subCatId);
     setIsMainCategoryView(false);
     setIsMenuOpen(false);
+    setIsLoading(true);
     
     // URLを更新
     updateURL({
@@ -286,6 +287,8 @@ export default function UserRankingClient({
       }
     } catch (error) {
       console.error("Error fetching subcategory rankings:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -295,6 +298,7 @@ export default function UserRankingClient({
     setSelectedCategory("");
     setIsMainCategoryView(true);
     setIsMenuOpen(false);
+    setIsLoading(true);
     
     // URLを更新
     updateURL({
@@ -334,6 +338,8 @@ export default function UserRankingClient({
       }
     } catch (error) {
       console.error("Error fetching main category rankings:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
