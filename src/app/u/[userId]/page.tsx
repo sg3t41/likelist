@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import UserRankingClient from "@/components/UserRankingClient";
+import CategoryNotFoundPage from "@/components/CategoryNotFoundPage";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -63,6 +64,43 @@ export default async function UserPage({ params, searchParams }: PageProps) {
     highlight: urlParams.highlight as string | undefined,
   };
 
+  // カテゴリ存在チェック
+  if (initialSelection.view === "main" && initialSelection.mainCategoryId) {
+    const mainCategory = await prisma.mainCategory.findFirst({
+      where: {
+        id: initialSelection.mainCategoryId,
+        userId: user.id,
+      },
+    });
+
+    if (!mainCategory) {
+      return (
+        <CategoryNotFoundPage
+          categoryType="main"
+          categoryName={initialSelection.mainCategory}
+          userId={user.id}
+        />
+      );
+    }
+  } else if (initialSelection.subCategoryId) {
+    const subCategory = await prisma.subCategory.findFirst({
+      where: {
+        id: initialSelection.subCategoryId,
+        userId: user.id,
+      },
+    });
+
+    if (!subCategory) {
+      return (
+        <CategoryNotFoundPage
+          categoryType="sub"
+          categoryName={initialSelection.subCategory}
+          userId={user.id}
+        />
+      );
+    }
+  }
+
   // 初期ランキングデータを取得
   let initialRankings = null;
   if (initialSelection.view === "main" && initialSelection.mainCategoryId) {
@@ -103,7 +141,7 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         title: item.title,
         description: item.description,
         url: item.url,
-        images: item.images,
+        images: item.images?.slice(0, 1) || [],
         position: item.position || 999,
         isReference: false,
       })),
@@ -128,6 +166,11 @@ export default async function UserPage({ params, searchParams }: PageProps) {
     };
   } else if (initialSelection.subCategoryId) {
     // 小カテゴリのランキングを取得
+    const subCategory = await prisma.subCategory.findUnique({
+      where: { id: initialSelection.subCategoryId },
+      select: { name: true },
+    });
+
     const items = await prisma.rankingItem.findMany({
       where: {
         userId: user.id,
@@ -143,14 +186,14 @@ export default async function UserPage({ params, searchParams }: PageProps) {
     initialRankings = {
       type: "sub",
       categoryId: initialSelection.subCategoryId,
-      categoryName: initialSelection.subCategory,
-      items: items.map((item) => ({
+      categoryName: subCategory?.name || initialSelection.subCategory,
+      items: items.map((item, index) => ({
         id: item.id,
         title: item.title,
         description: item.description,
         url: item.url,
-        images: item.images,
-        position: item.position,
+        images: item.images?.slice(0, 1) || [],
+        position: item.position || (index + 1), // positionがnullの場合はインデックス+1を使用
       })),
     };
   }

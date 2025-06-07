@@ -73,8 +73,10 @@ export default function UserRankingClient({
   // 現在のユーザーがページの所有者かどうか
   const isOwner = currentUser && currentUser.userId === pageUser.id;
 
-  // 初期状態をサーバーから受け取った値で設定
-  const [selectedCategory, setSelectedCategory] = useState<Category>(initialSelection?.subCategory || "");
+  // 初期状態をサーバーから受け取った値で設定（サーバーデータ優先）
+  const [selectedCategory, setSelectedCategory] = useState<Category>(
+    serverInitialRankings?.type === 'sub' ? serverInitialRankings.categoryName : initialSelection?.subCategory || ""
+  );
   const [selectedMainCategory, setSelectedMainCategory] = useState<MainCategory>(initialSelection?.mainCategory || "");
   const [selectedMainCategoryId, setSelectedMainCategoryId] = useState<string>(initialSelection?.mainCategoryId || "");
   const [isMainCategoryView, setIsMainCategoryView] = useState(initialSelection?.view === 'main');
@@ -98,10 +100,7 @@ export default function UserRankingClient({
     return rankings;
   };
   
-  const [rankings, setRankings] = useState<Rankings>(() => {
-    // 初期化時により確実にデータを設定
-    return getInitialRankings();
-  });
+  const [rankings, setRankings] = useState<Rankings>(getInitialRankings());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [isAddSubCategoryModalOpen, setIsAddSubCategoryModalOpen] = useState(false);
@@ -137,27 +136,6 @@ export default function UserRankingClient({
   const [selectedImageModal, setSelectedImageModal] = useState<{url: string, alt: string} | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 初期データの同期処理
-  useEffect(() => {
-    if (serverInitialRankings && serverInitialRankings.items.length > 0) {
-      const rankingMap: RankingMap = {};
-      serverInitialRankings.items.forEach((item: any) => {
-        rankingMap[item.position] = item;
-      });
-      
-      const key = serverInitialRankings.type === 'main' 
-        ? `main_${serverInitialRankings.categoryId}`
-        : serverInitialRankings.categoryName;
-      
-      // 既存のデータがない場合のみ設定
-      setRankings(prev => {
-        if (!prev[key] || Object.keys(prev[key]).length === 0) {
-          return { ...prev, [key]: rankingMap };
-        }
-        return prev;
-      });
-    }
-  }, [serverInitialRankings]);
 
   // タイトル編集関数
   const handleSaveTitle = async () => {
