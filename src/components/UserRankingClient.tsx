@@ -972,7 +972,12 @@ export default function UserRankingClient({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/10 dark:to-indigo-900/10 relative">
+      {/* 背景装飾 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-pink-300/10 to-purple-300/10 dark:from-pink-600/5 dark:to-purple-600/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-gradient-to-tr from-blue-300/10 to-indigo-300/10 dark:from-blue-600/5 dark:to-indigo-600/5 rounded-full blur-3xl"></div>
+      </div>
       <UserRankingHeader
         pageUser={pageUser}
         currentUser={currentUser}
@@ -989,14 +994,14 @@ export default function UserRankingClient({
           onClick={() => setIsMenuOpen(false)}
         />
         <div
-          className={`absolute left-0 top-0 h-full w-80 bg-white dark:bg-gray-800 shadow-lg overflow-y-auto transform transition-transform duration-300 ease-out ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+          className={`absolute left-0 top-0 h-full w-80 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-out ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
         >
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
+                  className="p-1.5 rounded-lg text-purple-400 hover:text-purple-600 dark:text-purple-400 dark:hover:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all"
                   title="閉じる"
                 >
                   <svg
@@ -1013,8 +1018,11 @@ export default function UserRankingClient({
                     />
                   </svg>
                 </button>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  カテゴリー
+                <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-500 rounded-md flex items-center justify-center">
+                  <span className="text-white text-sm">📁</span>
+                </div>
+                <h2 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                  フォルダ
                 </h2>
               </div>
               {isOwner && (
@@ -1023,19 +1031,19 @@ export default function UserRankingClient({
                     setIsAddCategoryModalOpen(true);
                     setIsMenuOpen(false);
                   }}
-                  className="px-3 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 text-sm font-medium"
-                  title="大カテゴリを追加"
+                  className="px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-1.5 text-sm font-medium"
+                  title="新しいフォルダを作成"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  <span>追加</span>
+                  <span>新規</span>
                 </button>
               )}
             </div>
             {allCategories.map((mainCat) => (
-              <div key={mainCat.id} className="mb-4">
-                <div className="flex items-center justify-between">
+              <div key={mainCat.id} className="mb-3">
+                <div className="flex items-center justify-between group">
                   <div className="flex items-center flex-1">
                     <button
                       onClick={() => {
@@ -1049,10 +1057,10 @@ export default function UserRankingClient({
                           return newSet;
                         });
                       }}
-                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                      className="p-1.5 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-all"
                     >
                       <svg 
-                        className={`w-4 h-4 text-gray-500 transform transition-transform ${expandedCategories.has(mainCat.id) ? 'rotate-90' : ''}`}
+                        className={`w-4 h-4 text-purple-500 dark:text-purple-400 transform transition-transform ${expandedCategories.has(mainCat.id) ? 'rotate-90' : ''}`}
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
@@ -1065,13 +1073,16 @@ export default function UserRankingClient({
                         handleMainCategorySelect(mainCat);
                         setIsMenuOpen(false);
                       }}
-                      className={`flex-1 text-left text-lg font-semibold transition-colors px-4 py-2 rounded-md ${
+                      className={`flex-1 text-left transition-all px-3 py-2.5 rounded-xl flex items-center gap-2 group-hover:shadow-md transform hover:scale-[1.02] ${
                         isMainCategoryView && selectedMainCategoryId === mainCat.id
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                          ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+                          : "bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 text-gray-700 dark:text-gray-300 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/40 dark:hover:to-pink-900/40"
                       }`}
                     >
-                      {mainCat.name}
+                      <span className="text-base">
+                        {expandedCategories.has(mainCat.id) ? '📂' : '⭐'}
+                      </span>
+                      <span className="font-semibold text-sm truncate">{mainCat.name}</span>
                     </button>
                   </div>
                   {isOwner && (
@@ -1081,8 +1092,8 @@ export default function UserRankingClient({
                         setIsAddSubCategoryModalOpen(true);
                         setIsMenuOpen(false);
                       }}
-                      className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-all"
-                      title="小カテゴリを追加"
+                      className="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-all transform hover:scale-110 opacity-60 hover:opacity-100"
+                      title="サブフォルダを作成"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1091,22 +1102,22 @@ export default function UserRankingClient({
                   )}
                 </div>
                 {expandedCategories.has(mainCat.id) && (
-                  <div className="ml-5 mt-2 space-y-1">
+                  <div className="ml-6 mt-2 space-y-1 border-l-2 border-gradient-to-b from-purple-200 to-pink-200 dark:from-purple-800 dark:to-pink-800 pl-3">
                     {mainCat.subCategories.map((subCat: any) => (
-                      <div key={subCat.id} className="flex items-center">
-                        <span className="mr-2 text-gray-400">└</span>
+                      <div key={subCat.id} className="flex items-center group">
                         <button
                           onClick={() => {
                             handleCategorySelect(mainCat.name, subCat.name, subCat.id);
                             setIsMenuOpen(false);
                           }}
-                          className={`flex-1 text-left px-4 py-2 rounded-md transition-colors ${
+                          className={`flex-1 text-left px-3 py-2 rounded-lg transition-all flex items-center gap-2 transform hover:scale-[1.02] ${
                             selectedCategory === subCat.name
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
+                              : "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-gray-700 dark:text-gray-300 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900/40 dark:hover:to-purple-900/40"
                           }`}
                         >
-                          {subCat.name}
+                          <span className="text-sm">🏷️</span>
+                          <span className="text-sm font-medium truncate">{subCat.name}</span>
                         </button>
                       </div>
                     ))}
@@ -1120,29 +1131,34 @@ export default function UserRankingClient({
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
-          {/* サイドバー（デスクトップ） */}
-          <div className="hidden lg:block w-80 bg-white dark:bg-gray-800 rounded-lg shadow p-6 h-fit">
+          {/* サイドバー（デスクトップ）- ファイラ風デザイン */}
+          <div className="hidden lg:block w-80 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/30 p-6 h-fit">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                カテゴリー
-              </h2>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center shadow-md">
+                  <span className="text-white text-lg">📁</span>
+                </div>
+                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                  フォルダ
+                </h2>
+              </div>
               {isOwner && (
                 <button
                   onClick={() => setIsAddCategoryModalOpen(true)}
-                  className="px-3 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 text-sm font-medium"
-                  title="大カテゴリを追加"
+                  className="px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-1.5 text-sm font-medium"
+                  title="新しいフォルダを作成"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  <span>追加</span>
+                  <span>新規</span>
                 </button>
               )}
             </div>
             
             {allCategories.map((mainCat) => (
-              <div key={mainCat.id} className="mb-4">
-                <div className="flex items-center justify-between">
+              <div key={mainCat.id} className="mb-3">
+                <div className="flex items-center justify-between group">
                   <div className="flex items-center flex-1">
                     <button
                       onClick={() => {
@@ -1156,10 +1172,10 @@ export default function UserRankingClient({
                           return newSet;
                         });
                       }}
-                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                      className="p-1.5 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-all"
                     >
                       <svg 
-                        className={`w-4 h-4 text-gray-500 transform transition-transform ${expandedCategories.has(mainCat.id) ? 'rotate-90' : ''}`}
+                        className={`w-4 h-4 text-purple-500 dark:text-purple-400 transform transition-transform ${expandedCategories.has(mainCat.id) ? 'rotate-90' : ''}`}
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
@@ -1169,13 +1185,16 @@ export default function UserRankingClient({
                     </button>
                     <button
                       onClick={() => handleMainCategorySelect(mainCat)}
-                      className={`flex-1 text-left text-lg font-semibold transition-colors px-4 py-2 rounded-md ${
+                      className={`flex-1 text-left transition-all px-4 py-3 rounded-xl flex items-center gap-3 group-hover:shadow-md transform hover:scale-[1.02] ${
                         isMainCategoryView && selectedMainCategoryId === mainCat.id
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                          ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+                          : "bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 text-gray-700 dark:text-gray-300 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/40 dark:hover:to-pink-900/40"
                       }`}
                     >
-                      {mainCat.name}
+                      <span className="text-lg">
+                        ⭐
+                      </span>
+                      <span className="font-semibold text-sm truncate">{mainCat.name}</span>
                     </button>
                   </div>
                   {isOwner && (
@@ -1184,8 +1203,8 @@ export default function UserRankingClient({
                         setSelectedMainCategoryForAdd(mainCat);
                         setIsAddSubCategoryModalOpen(true);
                       }}
-                      className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-all"
-                      title="小カテゴリを追加"
+                      className="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-all transform hover:scale-110 opacity-60 hover:opacity-100"
+                      title="サブフォルダを作成"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1194,19 +1213,19 @@ export default function UserRankingClient({
                   )}
                 </div>
                 {expandedCategories.has(mainCat.id) && (
-                  <div className="ml-5 mt-2 space-y-1">
+                  <div className="ml-8 mt-2 space-y-1 border-l-2 border-gradient-to-b from-purple-200 to-pink-200 dark:from-purple-800 dark:to-pink-800 pl-4">
                     {mainCat.subCategories.map((subCat: any) => (
-                      <div key={subCat.id} className="flex items-center">
-                        <span className="mr-2 text-gray-400">└</span>
+                      <div key={subCat.id} className="flex items-center group">
                         <button
                           onClick={() => handleCategorySelect(mainCat.name, subCat.name, subCat.id)}
-                          className={`flex-1 text-left px-4 py-2 rounded-md transition-colors ${
+                          className={`flex-1 text-left px-4 py-2.5 rounded-lg transition-all flex items-center gap-3 transform hover:scale-[1.02] ${
                             selectedCategory === subCat.name
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
+                              : "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-gray-700 dark:text-gray-300 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900/40 dark:hover:to-purple-900/40"
                           }`}
                         >
-                          {subCat.name}
+                          <span className="text-sm">🏷️</span>
+                          <span className="text-sm font-medium truncate">{subCat.name}</span>
                         </button>
                       </div>
                     ))}
@@ -1222,18 +1241,23 @@ export default function UserRankingClient({
                 <RankingSkeleton />
               </div>
             ) : !selectedCategory && !isMainCategoryView ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 text-center border border-white/20">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-pink-400 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <span className="text-3xl">✨</span>
+                </div>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-4">
                   カテゴリを選択してください
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">
-                  左のサイドバーからカテゴリを選択すると、好きなものリストが表示されます。
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                  左のサイドバーからカテゴリを選択すると、
+                  <br />
+                  あなたの好きなものリストが表示されます ✨
                 </p>
               </div>
             ) : (
-              /* 既存のランキング表示 */
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              /* メインコンテンツエリア - 装飾強化 */
+              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/30 overflow-hidden">
+                <div className="px-6 py-5 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-b border-purple-100 dark:border-purple-800/30 flex items-center justify-between">
                   {isEditingTitle ? (
                     <div className="flex items-center space-x-2 flex-1">
                       <input
@@ -1269,9 +1293,30 @@ export default function UserRankingClient({
                       </button>
                     </div>
                   ) : (
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      {isMainCategoryView ? selectedMainCategory : selectedCategory}
-                    </h2>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center shadow-md">
+                        <span className="text-white text-lg">🏆</span>
+                      </div>
+                      <h2 className="text-xl font-bold flex items-center gap-2">
+                        {isMainCategoryView ? (
+                          <span className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                            {selectedMainCategory}
+                          </span>
+                        ) : (
+                          <>
+                            <span className="text-sm text-purple-400 dark:text-purple-300 font-medium flex items-center gap-1">
+                              <span>⭐</span>
+                              <span>{selectedMainCategory}</span>
+                            </span>
+                            <span className="text-purple-300 dark:text-purple-400">/</span>
+                            <span className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent flex items-center gap-1">
+                              <span className="text-base">🏷️</span>
+                              <span>{selectedCategory}</span>
+                            </span>
+                          </>
+                        )}
+                      </h2>
+                    </div>
                   )}
                   <div className="relative ranking-menu-container">
                     <button
@@ -1391,7 +1436,7 @@ export default function UserRankingClient({
                   </div>
                 </div>
 
-                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                <div className="divide-y divide-purple-100 dark:divide-purple-800/30">
                 {Array.from({ length: 11 }, (_, index) => {
                   const position = index + 1;
                   
@@ -1424,47 +1469,73 @@ export default function UserRankingClient({
                     <div
                       id={`ranking-item-${index + 1}`}
                       key={item?.id || `empty-${index}`}
-                      className={`px-6 py-4 flex items-center justify-between transition-all duration-300 ${
+                      className={`px-6 py-5 flex items-center justify-between transition-all duration-300 group hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-pink-50/50 dark:hover:from-purple-900/10 dark:hover:to-pink-900/10 ${
                         highlightPosition === index + 1
-                          ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-inset ring-blue-500 dark:ring-blue-400'
-                          : ''
+                          ? 'bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 ring-2 ring-inset ring-purple-400 dark:ring-purple-500 shadow-lg'
+                          : item ? 'hover:shadow-md' : ''
                       }`}
                       // タッチイベントハンドラーを完全に削除
                     >
                       <div className="flex items-center space-x-4 flex-1">
                         {/* ランキング番号（クリック不可） */}
-                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-bold text-blue-600 dark:text-blue-300">
-                            {index + 1}
-                          </span>
+                        <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-md transform transition-all duration-300 ${
+                          index === 0 
+                            ? 'bg-gradient-to-br from-yellow-400 to-amber-500 scale-110' 
+                            : index === 1 
+                            ? 'bg-gradient-to-br from-gray-300 to-gray-400 scale-105' 
+                            : index === 2 
+                            ? 'bg-gradient-to-br from-orange-400 to-amber-600 scale-105' 
+                            : 'bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-900'
+                        }`}>
+                          {index < 3 ? (
+                            <span className="text-2xl" role="img" aria-label={`${index + 1}位`}>
+                              {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                            </span>
+                          ) : (
+                            <span className={`font-bold ${
+                              index < 3 ? 'text-white text-lg' : 'text-blue-700 dark:text-blue-200 text-sm'
+                            }`}>
+                              {index + 1}
+                            </span>
+                          )}
                         </div>
                         
-                        {/* コンテンツ部分：完全にスクロール可能 */}
+                        {/* コンテンツ部分：装飾強化 */}
                         <div className="flex-1 min-w-0">
                           {item?.url && !item?.isDeleted ? (
                             <a
                               href={item.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`text-lg font-medium truncate block hover:underline ${
+                              className={`text-lg font-semibold truncate block hover:underline transition-all flex items-center gap-2 ${
                                 item?.isDeleted 
                                   ? "text-gray-400 dark:text-gray-600 italic" 
-                                  : "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                                  : "text-purple-700 dark:text-purple-300 hover:text-purple-800 dark:hover:text-purple-200 group-hover:scale-[1.02]"
                               }`}
                             >
-                              {item.title}
+                              <span>{item.title}</span>
+                              <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">🔗</span>
                             </a>
                           ) : (
-                            <h3 className={`text-lg font-medium truncate ${
+                            <h3 className={`text-lg font-semibold truncate flex items-center gap-2 ${
                               item?.isDeleted 
                                 ? "text-gray-400 dark:text-gray-600 italic" 
-                                : "text-gray-900 dark:text-white"
+                                : item 
+                                ? "text-gray-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors"
+                                : "text-gray-400 dark:text-gray-600"
                             }`}>
-                              {item ? item.title : "―"}
+                              {item ? (
+                                <>
+                                  <span>{item.title}</span>
+                                  {index < 3 && <span className="text-xs opacity-60">✨</span>}
+                                </>
+                              ) : (
+                                <span className="italic">空きスロット</span>
+                              )}
                             </h3>
                           )}
                           {item?.description && !item?.isDeleted && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
                               {item.description}
                             </p>
                           )}
@@ -1490,19 +1561,23 @@ export default function UserRankingClient({
                             </button>
                           )}
                           {item?.images && item.images.length > 0 && !item?.isDeleted && (
-                            <div className="mt-2">
+                            <div className="mt-3">
                               <div 
-                                className="relative overflow-hidden rounded-md border border-gray-200 dark:border-gray-700 w-32 h-32 cursor-pointer hover:opacity-90 transition-opacity"
+                                className="relative overflow-hidden rounded-xl border-2 border-purple-200 dark:border-purple-700 w-32 h-32 cursor-pointer hover:border-purple-400 dark:hover:border-purple-500 transition-all transform hover:scale-105 shadow-md hover:shadow-lg group/image"
                                 onClick={() => setSelectedImageModal({url: item.images[0].url, alt: `${item.title} - 画像`})}
                               >
                                 <img
                                   src={item.images[0].url}
                                   alt={`${item.title} - 画像`}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover group-hover/image:scale-110 transition-transform duration-300"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
                                   }}
                                 />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity"></div>
+                                <div className="absolute bottom-2 right-2 text-white opacity-0 group-hover/image:opacity-100 transition-opacity">
+                                  <span className="text-xs bg-black/50 rounded px-1">🔍</span>
+                                </div>
                               </div>
                             </div>
                           )}
@@ -1602,8 +1677,8 @@ export default function UserRankingClient({
                             setTargetPosition(index + 1);
                             setIsAddRankingItemModalOpen(true);
                           }}
-                          className="p-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg shadow-sm hover:shadow-md transition-all ml-2"
-                          title={`${index + 1}位に項目を追加`}
+                          className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-110 ml-2 opacity-60 group-hover:opacity-100"
+                          title={`${index + 1}位に好きなものを追加 ✨`}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
