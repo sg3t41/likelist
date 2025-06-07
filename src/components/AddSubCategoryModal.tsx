@@ -44,16 +44,16 @@ export default function AddSubCategoryModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/30 p-8 w-full max-w-lg">
+      <div className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8 w-full max-w-lg">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
             <span className="text-white text-xl">🏷️</span>
           </div>
           <div className="flex-1">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 dark:from-orange-400 dark:to-pink-400 bg-clip-text text-transparent">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
               サブフォルダを作成
             </h2>
-            <p className="text-sm text-orange-600 dark:text-orange-400 mt-1 flex items-center gap-1">
+            <p className="text-sm text-orange-600 mt-1 flex items-center gap-1">
               <span>⭐</span>
               <span className="font-medium">{mainCategoryName}</span>
               <span>に追加</span>
@@ -62,7 +62,7 @@ export default function AddSubCategoryModal({
         </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-8">
-            <label className="block text-sm font-semibold mb-4 text-orange-700 dark:text-orange-300 flex items-center gap-2">
+            <label className="block text-sm font-semibold mb-4 text-orange-700 flex items-center gap-2">
               <span>🏷️</span>
               サブカテゴリ名
             </label>
@@ -71,7 +71,7 @@ export default function AddSubCategoryModal({
                 type="text"
                 value={subCategoryName}
                 onChange={(e) => setSubCategoryName(e.target.value)}
-                className="w-full px-4 py-4 border-2 border-orange-200 dark:border-orange-700 rounded-xl bg-white/80 dark:bg-gray-700/80 text-gray-900 dark:text-white focus:border-orange-400 dark:focus:border-orange-500 focus:ring-0 transition-all backdrop-blur-sm text-lg"
+                className="w-full px-4 py-4 border-2 border-orange-200 rounded-xl bg-white/80 text-gray-900 focus:border-orange-400 focus:ring-0 transition-all backdrop-blur-sm text-lg"
                 placeholder="例: 野球、サッカー、バスケットボール..."
                 autoFocus
               />
@@ -79,17 +79,17 @@ export default function AddSubCategoryModal({
                 <span className="text-orange-400 text-2xl">✨</span>
               </div>
             </div>
-            <p className="text-xs text-orange-600 dark:text-orange-400 mt-2 flex items-center gap-1">
+            <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
               <span>💡</span>
               <span>このカテゴリで好きなものを整理できます</span>
             </p>
           </div>
 
-          <div className="flex gap-3 justify-end pt-6 border-t border-orange-200 dark:border-orange-700">
+          <div className="flex gap-3 justify-end pt-6 border-t border-orange-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-xl font-semibold transition-all transform hover:scale-105"
+              className="px-6 py-3 text-orange-600 hover:bg-orange-100 rounded-xl font-semibold transition-all transform hover:scale-105"
               disabled={isLoading}
             >
               キャンセル

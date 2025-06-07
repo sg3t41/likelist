@@ -811,11 +811,11 @@ export default function UserRankingClient({
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+        <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+          <h3 className="text-lg font-semibold mb-4 text-gray-900">
             順位を選択
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-sm text-gray-600 mb-4">
             「{item.title}」の新しい順位を選択してください
           </p>
           
@@ -830,7 +830,7 @@ export default function UserRankingClient({
                 className={`p-3 rounded-md text-center font-medium transition-colors ${
                   pos === currentPosition
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                 }`}
               >
                 {pos}
@@ -841,7 +841,7 @@ export default function UserRankingClient({
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+              className="flex-1 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
             >
               キャンセル
             </button>
@@ -888,25 +888,25 @@ export default function UserRankingClient({
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <h3 className="text-lg font-semibold mb-4 text-gray-900">
             カテゴリを削除しますか？
           </h3>
           
-          <div className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mb-6 text-sm text-gray-600">
             <p className="mb-2">
-              <span className="font-semibold text-gray-900 dark:text-white">
+              <span className="font-semibold text-gray-900">
                 「{categoryToDelete.name}」
               </span>
               を削除しようとしています。
             </p>
             
             {categoryToDelete.type === 'main' && categoryToDelete.subCategories && categoryToDelete.subCategories.length > 0 && (
-              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-800">
-                <p className="text-yellow-800 dark:text-yellow-200 font-medium mb-2">
+              <div className="mt-4 p-3 bg-yellow-50 rounded-md border border-yellow-200">
+                <p className="text-yellow-800 font-medium mb-2">
                   以下の小カテゴリも削除されます：
                 </p>
-                <ul className="list-disc list-inside text-yellow-700 dark:text-yellow-300">
+                <ul className="list-disc list-inside text-yellow-700">
                   {categoryToDelete.subCategories.map((sub: any) => (
                     <li key={sub.id}>{sub.name}</li>
                   ))}
@@ -914,7 +914,7 @@ export default function UserRankingClient({
               </div>
             )}
             
-            <p className="mt-4 text-red-600 dark:text-red-400">
+            <p className="mt-4 text-red-600">
               この操作は取り消せません。関連するすべての項目も削除されます。
             </p>
           </div>
@@ -925,7 +925,7 @@ export default function UserRankingClient({
                 setShowDeleteCategoryModal(false);
                 setCategoryToDelete(null);
               }}
-              className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+              className="flex-1 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
             >
               キャンセル
             </button>
@@ -956,11 +956,11 @@ export default function UserRankingClient({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/10 dark:to-indigo-900/10 relative">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative">
       {/* 背景装飾 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-pink-300/10 to-purple-300/10 dark:from-pink-600/5 dark:to-purple-600/5 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-gradient-to-tr from-blue-300/10 to-indigo-300/10 dark:from-blue-600/5 dark:to-indigo-600/5 rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-pink-300/10 to-purple-300/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-gradient-to-tr from-blue-300/10 to-indigo-300/10 rounded-full blur-3xl"></div>
       </div>
       <UserRankingHeader
         pageUser={pageUser}
@@ -978,14 +978,14 @@ export default function UserRankingClient({
           onClick={() => setIsMenuOpen(false)}
         />
         <div
-          className={`absolute left-0 top-0 h-full w-80 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-out ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+          className={`absolute left-0 top-0 h-full w-80 bg-white/95 backdrop-blur-lg shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-out ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
         >
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="p-1.5 rounded-lg text-purple-400 hover:text-purple-600 dark:text-purple-400 dark:hover:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all"
+                  className="p-1.5 rounded-lg text-purple-400 hover:text-purple-600 hover:bg-purple-100 transition-all"
                   title="閉じる"
                 >
                   <svg
@@ -1005,7 +1005,7 @@ export default function UserRankingClient({
                 <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-500 rounded-md flex items-center justify-center">
                   <span className="text-white text-sm">📁</span>
                 </div>
-                <h2 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                <h2 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                   フォルダ
                 </h2>
               </div>
@@ -1041,10 +1041,10 @@ export default function UserRankingClient({
                           return newSet;
                         });
                       }}
-                      className="p-1.5 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-all"
+                      className="p-1.5 hover:bg-purple-100 rounded-lg transition-all"
                     >
                       <svg 
-                        className={`w-4 h-4 text-purple-500 dark:text-purple-400 transform transition-transform ${expandedCategories.has(mainCat.id) ? 'rotate-90' : ''}`}
+                        className={`w-4 h-4 text-purple-500 transform transition-transform ${expandedCategories.has(mainCat.id) ? 'rotate-90' : ''}`}
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
@@ -1060,7 +1060,7 @@ export default function UserRankingClient({
                       className={`flex-1 text-left transition-all px-3 py-2.5 rounded-xl flex items-center gap-2 group-hover:shadow-md transform hover:scale-[1.02] ${
                         isMainCategoryView && selectedMainCategoryId === mainCat.id
                           ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
-                          : "bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 text-gray-700 dark:text-gray-300 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/40 dark:hover:to-pink-900/40"
+                          : "bg-gradient-to-r from-purple-50 to-pink-50 text-gray-700 hover:from-purple-100 hover:to-pink-100"
                       }`}
                     >
                       <span className="text-base">
@@ -1076,7 +1076,7 @@ export default function UserRankingClient({
                         setIsAddSubCategoryModalOpen(true);
                         setIsMenuOpen(false);
                       }}
-                      className="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-all transform hover:scale-110 opacity-60 hover:opacity-100"
+                      className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-all transform hover:scale-110 opacity-60 hover:opacity-100"
                       title="サブフォルダを作成"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1086,7 +1086,7 @@ export default function UserRankingClient({
                   )}
                 </div>
                 {expandedCategories.has(mainCat.id) && (
-                  <div className="ml-6 mt-2 space-y-1 border-l-2 border-gradient-to-b from-purple-200 to-pink-200 dark:from-purple-800 dark:to-pink-800 pl-3">
+                  <div className="ml-6 mt-2 space-y-1 border-l-2 border-gradient-to-b from-purple-200 to-pink-200 pl-3">
                     {mainCat.subCategories.map((subCat: any) => (
                       <div key={subCat.id} className="flex items-center group">
                         <button
@@ -1097,7 +1097,7 @@ export default function UserRankingClient({
                           className={`flex-1 text-left px-3 py-2 rounded-lg transition-all flex items-center gap-2 transform hover:scale-[1.02] ${
                             selectedCategory === subCat.name
                               ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-                              : "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-gray-700 dark:text-gray-300 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900/40 dark:hover:to-purple-900/40"
+                              : "bg-gradient-to-r from-blue-50 to-purple-50 text-gray-700 hover:from-blue-100 hover:to-purple-100"
                           }`}
                         >
                           <span className="text-sm">🏷️</span>
@@ -1116,13 +1116,13 @@ export default function UserRankingClient({
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
           {/* サイドバー（デスクトップ）- ファイラ風デザイン */}
-          <div className="hidden lg:block w-80 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/30 p-6 h-fit">
+          <div className="hidden lg:block w-80 bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6 h-fit">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center shadow-md">
                   <span className="text-white text-lg">📁</span>
                 </div>
-                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                   フォルダ
                 </h2>
               </div>
@@ -1156,10 +1156,10 @@ export default function UserRankingClient({
                           return newSet;
                         });
                       }}
-                      className="p-1.5 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-all"
+                      className="p-1.5 hover:bg-purple-100 rounded-lg transition-all"
                     >
                       <svg 
-                        className={`w-4 h-4 text-purple-500 dark:text-purple-400 transform transition-transform ${expandedCategories.has(mainCat.id) ? 'rotate-90' : ''}`}
+                        className={`w-4 h-4 text-purple-500 transform transition-transform ${expandedCategories.has(mainCat.id) ? 'rotate-90' : ''}`}
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
@@ -1172,7 +1172,7 @@ export default function UserRankingClient({
                       className={`flex-1 text-left transition-all px-4 py-3 rounded-xl flex items-center gap-3 group-hover:shadow-md transform hover:scale-[1.02] ${
                         isMainCategoryView && selectedMainCategoryId === mainCat.id
                           ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
-                          : "bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 text-gray-700 dark:text-gray-300 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/40 dark:hover:to-pink-900/40"
+                          : "bg-gradient-to-r from-purple-50 to-pink-50 text-gray-700 hover:from-purple-100 hover:to-pink-100"
                       }`}
                     >
                       <span className="text-lg">
@@ -1187,7 +1187,7 @@ export default function UserRankingClient({
                         setSelectedMainCategoryForAdd(mainCat);
                         setIsAddSubCategoryModalOpen(true);
                       }}
-                      className="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-all transform hover:scale-110 opacity-60 hover:opacity-100"
+                      className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-all transform hover:scale-110 opacity-60 hover:opacity-100"
                       title="サブフォルダを作成"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1197,7 +1197,7 @@ export default function UserRankingClient({
                   )}
                 </div>
                 {expandedCategories.has(mainCat.id) && (
-                  <div className="ml-8 mt-2 space-y-1 border-l-2 border-gradient-to-b from-purple-200 to-pink-200 dark:from-purple-800 dark:to-pink-800 pl-4">
+                  <div className="ml-8 mt-2 space-y-1 border-l-2 border-gradient-to-b from-purple-200 to-pink-200 pl-4">
                     {mainCat.subCategories.map((subCat: any) => (
                       <div key={subCat.id} className="flex items-center group">
                         <button
@@ -1205,7 +1205,7 @@ export default function UserRankingClient({
                           className={`flex-1 text-left px-4 py-2.5 rounded-lg transition-all flex items-center gap-3 transform hover:scale-[1.02] ${
                             selectedCategory === subCat.name
                               ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-                              : "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-gray-700 dark:text-gray-300 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900/40 dark:hover:to-purple-900/40"
+                              : "bg-gradient-to-r from-blue-50 to-purple-50 text-gray-700 hover:from-blue-100 hover:to-purple-100"
                           }`}
                         >
                           <span className="text-sm">🏷️</span>
@@ -1221,18 +1221,18 @@ export default function UserRankingClient({
 
           <div className="flex-1">
             {isLoading ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="bg-white rounded-lg shadow p-6">
                 <RankingSkeleton />
               </div>
             ) : !selectedCategory && !isMainCategoryView ? (
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 text-center border border-white/20">
+              <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 text-center border border-white/20">
                 <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-pink-400 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <span className="text-3xl">✨</span>
                 </div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-4">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-4">
                   カテゴリを選択してください
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                <p className="text-gray-600 text-lg">
                   左のサイドバーからカテゴリを選択すると、
                   <br />
                   あなたの好きなものリストが表示されます ✨
@@ -1240,8 +1240,8 @@ export default function UserRankingClient({
               </div>
             ) : (
               /* メインコンテンツエリア - 装飾強化 */
-              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/30 overflow-hidden">
-                <div className="px-6 py-5 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-b border-purple-100 dark:border-purple-800/30 flex items-center justify-between">
+              <div className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
+                <div className="px-6 py-5 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100 flex items-center justify-between">
                   {isEditingTitle ? (
                     <div className="flex items-center space-x-2 flex-1">
                       <input
@@ -1254,14 +1254,14 @@ export default function UserRankingClient({
                           }
                           if (e.key === 'Escape') setIsEditingTitle(false);
                         }}
-                        className="text-xl font-semibold bg-transparent border-b-2 border-blue-500 outline-none text-gray-900 dark:text-white"
+                        className="text-xl font-semibold bg-transparent border-b-2 border-blue-500 outline-none text-gray-900"
                         autoFocus
                       />
                       <button
                         onClick={() => {
                           handleSaveTitle();
                         }}
-                        className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
+                        className="p-1 text-green-600 hover:bg-green-50 rounded"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -1269,7 +1269,7 @@ export default function UserRankingClient({
                       </button>
                       <button
                         onClick={() => setIsEditingTitle(false)}
-                        className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                        className="p-1 text-red-600 hover:bg-red-50 rounded"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1283,17 +1283,17 @@ export default function UserRankingClient({
                       </div>
                       <h2 className="text-xl font-bold flex items-center gap-2">
                         {isMainCategoryView ? (
-                          <span className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                          <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                             {selectedMainCategory}
                           </span>
                         ) : (
                           <>
-                            <span className="text-sm text-purple-400 dark:text-purple-300 font-medium flex items-center gap-1">
+                            <span className="text-sm text-purple-400 font-medium flex items-center gap-1">
                               <span>⭐</span>
                               <span>{selectedMainCategory}</span>
                             </span>
-                            <span className="text-purple-300 dark:text-purple-400">/</span>
-                            <span className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent flex items-center gap-1">
+                            <span className="text-purple-300">/</span>
+                            <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-1">
                               <span className="text-base">🏷️</span>
                               <span>{selectedCategory}</span>
                             </span>
@@ -1305,7 +1305,7 @@ export default function UserRankingClient({
                   <div className="relative ranking-menu-container">
                     <button
                       onClick={() => setIsRankingMenuOpen(!isRankingMenuOpen)}
-                      className="p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded-md"
+                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
                       title="メニュー"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1314,14 +1314,14 @@ export default function UserRankingClient({
                     </button>
                     
                     {isRankingMenuOpen && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-50 border border-gray-200 dark:border-gray-700">
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
                         <div className="py-1">
                           <button
                             onClick={() => {
                               handleCopyRankingUrl();
                               setIsRankingMenuOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                           >
                             {copiedRanking ? (
                               <>
@@ -1344,7 +1344,7 @@ export default function UserRankingClient({
                               handleShareRanking();
                               setIsRankingMenuOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                           >
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
@@ -1353,7 +1353,7 @@ export default function UserRankingClient({
                           </button>
                           {isOwner && (
                             <>
-                              <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                              <div className="border-t border-gray-200 my-1"></div>
                               <button
                                 onClick={() => {
                                   const currentTitle = isMainCategoryView 
@@ -1363,7 +1363,7 @@ export default function UserRankingClient({
                                   setIsEditingTitle(true);
                                   setIsRankingMenuOpen(false);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1374,7 +1374,7 @@ export default function UserRankingClient({
                           )}
                           {isOwner && (
                             <>
-                              <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                              <div className="border-t border-gray-200 my-1"></div>
                               <button
                                 onClick={() => {
                                   // 現在選択されているカテゴリの情報を取得
@@ -1405,7 +1405,7 @@ export default function UserRankingClient({
                                   setShowDeleteCategoryModal(true);
                                   setIsRankingMenuOpen(false);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1420,7 +1420,7 @@ export default function UserRankingClient({
                   </div>
                 </div>
 
-                <div className="divide-y divide-purple-100 dark:divide-purple-800/30">
+                <div className="divide-y divide-purple-100">
                 {Array.from({ length: 11 }, (_, index) => {
                   const position = index + 1;
                   
@@ -1453,9 +1453,9 @@ export default function UserRankingClient({
                     <div
                       id={`ranking-item-${index + 1}`}
                       key={item?.id || `empty-${index}`}
-                      className={`px-6 py-5 flex items-center justify-between transition-all duration-300 group hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-pink-50/50 dark:hover:from-purple-900/10 dark:hover:to-pink-900/10 ${
+                      className={`px-6 py-5 flex items-center justify-between transition-all duration-300 group hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-pink-50/50 ${
                         highlightPosition === index + 1
-                          ? 'bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 ring-2 ring-inset ring-purple-400 dark:ring-purple-500 shadow-lg'
+                          ? 'bg-gradient-to-r from-purple-100 to-pink-100 ring-2 ring-inset ring-purple-400 shadow-lg'
                           : item ? 'hover:shadow-md' : ''
                       }`}
                       // タッチイベントハンドラーを完全に削除
@@ -1469,7 +1469,7 @@ export default function UserRankingClient({
                             ? 'bg-gradient-to-br from-gray-300 to-gray-400 scale-105' 
                             : index === 2 
                             ? 'bg-gradient-to-br from-orange-400 to-amber-600 scale-105' 
-                            : 'bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-900'
+                            : 'bg-gradient-to-br from-blue-100 to-blue-200'
                         }`}>
                           {index < 3 ? (
                             <span className="text-2xl" role="img" aria-label={`${index + 1}位`}>
@@ -1477,7 +1477,7 @@ export default function UserRankingClient({
                             </span>
                           ) : (
                             <span className={`font-bold ${
-                              index < 3 ? 'text-white text-lg' : 'text-blue-700 dark:text-blue-200 text-sm'
+                              index < 3 ? 'text-white text-lg' : 'text-blue-700 text-sm'
                             }`}>
                               {index + 1}
                             </span>
@@ -1493,8 +1493,8 @@ export default function UserRankingClient({
                               rel="noopener noreferrer"
                               className={`text-lg font-semibold truncate block hover:underline transition-all flex items-center gap-2 ${
                                 item?.isDeleted 
-                                  ? "text-gray-400 dark:text-gray-600 italic" 
-                                  : "text-purple-700 dark:text-purple-300 hover:text-purple-800 dark:hover:text-purple-200 group-hover:scale-[1.02]"
+                                  ? "text-gray-400 italic" 
+                                  : "text-purple-700 hover:text-purple-800 group-hover:scale-[1.02]"
                               }`}
                             >
                               <span>{item.title}</span>
@@ -1503,10 +1503,10 @@ export default function UserRankingClient({
                           ) : (
                             <h3 className={`text-lg font-semibold truncate flex items-center gap-2 ${
                               item?.isDeleted 
-                                ? "text-gray-400 dark:text-gray-600 italic" 
+                                ? "text-gray-400 italic" 
                                 : item 
-                                ? "text-gray-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors"
-                                : "text-gray-400 dark:text-gray-600"
+                                ? "text-gray-900 group-hover:text-purple-700 transition-colors"
+                                : "text-gray-400"
                             }`}>
                               {item ? (
                                 <>
@@ -1519,7 +1519,7 @@ export default function UserRankingClient({
                             </h3>
                           )}
                           {item?.description && !item?.isDeleted && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
+                            <p className="text-sm text-gray-600 truncate mt-1 group-hover:text-gray-700 transition-colors">
                               {item.description}
                             </p>
                           )}
@@ -1539,7 +1539,7 @@ export default function UserRankingClient({
                                   );
                                 }
                               }}
-                              className="text-xs text-blue-600 dark:text-blue-400 mt-1 hover:text-blue-700 dark:hover:text-blue-300 hover:underline"
+                              className="text-xs text-blue-600 mt-1 hover:text-blue-700 hover:underline"
                             >
                               {item.sourceSubCategoryName} {position}位
                             </button>
@@ -1547,7 +1547,7 @@ export default function UserRankingClient({
                           {item?.images && item.images.length > 0 && !item?.isDeleted && (
                             <div className="mt-3">
                               <div 
-                                className="relative overflow-hidden rounded-xl border-2 border-purple-200 dark:border-purple-700 w-32 h-32 cursor-pointer hover:border-purple-400 dark:hover:border-purple-500 transition-all transform hover:scale-105 shadow-md hover:shadow-lg group/image"
+                                className="relative overflow-hidden rounded-xl border-2 border-purple-200 w-32 h-32 cursor-pointer hover:border-purple-400 transition-all transform hover:scale-105 shadow-md hover:shadow-lg group/image"
                                 onClick={() => setSelectedImageModal({url: item.images[0].url, alt: `${item.title} - 画像`})}
                               >
                                 <img
@@ -1575,7 +1575,7 @@ export default function UserRankingClient({
                               const menuId = `item-${item.id}`;
                               setOpenItemMenuId(openItemMenuId === menuId ? null : menuId);
                             }}
-                            className="p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded-md"
+                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
                             title="メニュー"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1584,7 +1584,7 @@ export default function UserRankingClient({
                           </button>
                           
                           {openItemMenuId === `item-${item.id}` && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-50 border border-gray-200 dark:border-gray-700">
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
                               <div className="py-1">
                                 {isOwner && (
                                   <>
@@ -1595,7 +1595,7 @@ export default function UserRankingClient({
                                             setSelectedItemForMove({ item, position });
                                             setOpenItemMenuId(null);
                                           }}
-                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                                         >
                                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
@@ -1608,7 +1608,7 @@ export default function UserRankingClient({
                                             setIsEditRankingItemModalOpen(true);
                                             setOpenItemMenuId(null);
                                           }}
-                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                                         >
                                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1624,7 +1624,7 @@ export default function UserRankingClient({
                                     handleShareItem(item, index + 1);
                                     setOpenItemMenuId(null);
                                   }}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                                 >
                                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
@@ -1641,7 +1641,7 @@ export default function UserRankingClient({
                                       );
                                       setOpenItemMenuId(null);
                                     }}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                                   >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

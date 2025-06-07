@@ -29,13 +29,13 @@ export default function UserRankingHeader({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   return (
-    <header className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-lg">
+    <header className="bg-gradient-to-r from-gray-50 to-gray-100 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50 transition-all"
+              className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-white/50 transition-all"
             >
               <svg
                 className="w-6 h-6"
@@ -69,14 +69,14 @@ export default function UserRankingHeader({
                 </div>
               </div>
               <div className="flex flex-col">
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                   <span>{pageUser.name || `@${pageUser.username}`} の</span>
                   <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent font-extrabold" style={{ fontFamily: 'var(--font-fredoka)' }}>
                     好きなものリスト
                   </span>
                 </h1>
                 {pageUser.name && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500">
                     @{pageUser.username}
                   </p>
                 )}
@@ -89,7 +89,7 @@ export default function UserRankingHeader({
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 p-2 rounded-md hover:bg-white/50 dark:hover:bg-gray-700/50 transition-all"
+                  className="flex items-center gap-2 p-2 rounded-md hover:bg-white/50 transition-all"
                 >
                   {currentUser.image && (
                     <img
@@ -101,19 +101,19 @@ export default function UserRankingHeader({
                 </button>
                 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
                     <button
                       onClick={() => {
                         router.push(`/u/${currentUser.userId}`);
                         setIsUserMenuOpen(false);
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       マイリスト
                     </button>
                     <button
                       onClick={() => signOut()}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       ログアウト
                     </button>

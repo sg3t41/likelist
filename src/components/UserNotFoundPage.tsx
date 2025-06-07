@@ -25,20 +25,20 @@ export default function UserNotFoundPage({ username }: UserNotFoundPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-lg">
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-gradient-to-r from-gray-50 to-gray-100 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <button
               onClick={() => router.push('/')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               ホームに戻る
             </button>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-gray-900">
               ランキング
             </h1>
             <div></div>
@@ -47,7 +47,7 @@ export default function UserNotFoundPage({ username }: UserNotFoundPageProps) {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
           <div className="mb-8">
             <div className="w-20 h-20 mx-auto mb-4 relative">
               <img
@@ -66,13 +66,13 @@ export default function UserNotFoundPage({ username }: UserNotFoundPageProps) {
                 {username.charAt(0).toUpperCase()}
               </div>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
               @{username}
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-lg text-gray-600 mb-4">
               このユーザーのランキングはまだありません
             </p>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-gray-600 mb-6">
               このユーザーはまだランキングを作成していないようです。<br />
               公開ツイートでランキング作成をリクエストしてみませんか？
             </p>
@@ -100,8 +100,8 @@ export default function UserNotFoundPage({ username }: UserNotFoundPageProps) {
             </button>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <p className="text-sm text-gray-500">
               💡 ヒント: @{username} さんがアプリにログインすると、ランキングを作成できます
             </p>
           </div>

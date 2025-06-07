@@ -53,18 +53,18 @@ export default function AddCategoryModal({ isOpen, onClose, onAdd }: AddCategory
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/30 p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
             <span className="text-white text-xl">📁</span>
           </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 dark:from-green-400 dark:to-blue-400 bg-clip-text text-transparent">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
             新しいフォルダを作成
           </h2>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
-            <label className="block text-sm font-semibold mb-3 text-green-700 dark:text-green-300 flex items-center gap-2">
+            <label className="block text-sm font-semibold mb-3 text-green-700 flex items-center gap-2">
               <span>⭐</span>
               メインカテゴリ
             </label>
@@ -72,7 +72,7 @@ export default function AddCategoryModal({ isOpen, onClose, onAdd }: AddCategory
               type="text"
               value={mainCategory}
               onChange={(e) => setMainCategory(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-green-200 dark:border-green-700 rounded-xl bg-white/80 dark:bg-gray-700/80 text-gray-900 dark:text-white focus:border-green-400 dark:focus:border-green-500 focus:ring-0 transition-all backdrop-blur-sm"
+              className="w-full px-4 py-3 border-2 border-green-200 rounded-xl bg-white/80 text-gray-900 focus:border-green-400 focus:ring-0 transition-all backdrop-blur-sm"
               placeholder="例: スポーツ、映画、書籍..."
               autoFocus
             />
@@ -80,7 +80,7 @@ export default function AddCategoryModal({ isOpen, onClose, onAdd }: AddCategory
 
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <label className="block text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
+              <label className="block text-sm font-semibold text-blue-700 flex items-center gap-2">
                 <span>🏷️</span>
                 サブカテゴリ
               </label>
@@ -95,18 +95,18 @@ export default function AddCategoryModal({ isOpen, onClose, onAdd }: AddCategory
             </div>
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {subCategories.map((subCat, index) => (
-                <div key={index} className="flex gap-3 p-3 bg-blue-50/50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
+                <div key={index} className="flex gap-3 p-3 bg-blue-50/50 rounded-xl border border-blue-200">
                   <input
                     type="text"
                     value={subCat}
                     onChange={(e) => handleSubCategoryChange(index, e.target.value)}
-                    className="flex-1 px-3 py-2 border-2 border-blue-200 dark:border-blue-600 rounded-lg bg-white/80 dark:bg-gray-700/80 text-gray-900 dark:text-white focus:border-blue-400 dark:focus:border-blue-500 focus:ring-0 transition-all"
+                    className="flex-1 px-3 py-2 border-2 border-blue-200 rounded-lg bg-white/80 text-gray-900 focus:border-blue-400 focus:ring-0 transition-all"
                     placeholder="例: 野球、サッカー..."
                   />
                   <button
                     type="button"
                     onClick={() => handleRemoveSubCategory(index)}
-                    className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-all transform hover:scale-110"
+                    className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-all transform hover:scale-110"
                     title="サブカテゴリを削除"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,12 +116,12 @@ export default function AddCategoryModal({ isOpen, onClose, onAdd }: AddCategory
                 </div>
               ))}
               {subCategories.length === 0 && (
-                <div className="text-center py-6 border-2 border-dashed border-blue-200 dark:border-blue-700 rounded-xl bg-blue-50/30 dark:bg-blue-900/10">
+                <div className="text-center py-6 border-2 border-dashed border-blue-200 rounded-xl bg-blue-50/30">
                   <span className="text-4xl mb-2 block">🏷️</span>
-                  <p className="text-sm text-blue-600 dark:text-blue-400">
+                  <p className="text-sm text-blue-600">
                     サブカテゴリを追加してみてください
                   </p>
-                  <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
+                  <p className="text-xs text-blue-500 mt-1">
                     より細かく分類できます
                   </p>
                 </div>
@@ -129,11 +129,11 @@ export default function AddCategoryModal({ isOpen, onClose, onAdd }: AddCategory
             </div>
           </div>
 
-          <div className="flex gap-3 justify-end pt-6 border-t border-green-200 dark:border-green-700">
+          <div className="flex gap-3 justify-end pt-6 border-t border-green-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-xl font-semibold transition-all transform hover:scale-105"
+              className="px-6 py-3 text-green-600 hover:bg-green-100 rounded-xl font-semibold transition-all transform hover:scale-105"
               disabled={isLoading}
             >
               キャンセル

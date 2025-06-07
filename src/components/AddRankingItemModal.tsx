@@ -124,24 +124,24 @@ export default function AddRankingItemModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/30 p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
             <span className="text-white text-xl">✨</span>
           </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             新しい好きなものを追加
           </h2>
         </div>
         <form onSubmit={handleSubmit}>
           {isMainCategoryView && subCategories && subCategories.length > 0 && (
-            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
-              <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-3 flex items-center gap-2">
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+              <h3 className="text-sm font-semibold text-blue-700 mb-3 flex items-center gap-2">
                 <span>🎨</span>
                 追加方法を選択
               </h3>
               <div className="space-y-3">
-                <label className="flex items-center p-3 bg-white/70 dark:bg-gray-700/70 rounded-lg border-2 border-transparent cursor-pointer transition-all hover:border-blue-300 dark:hover:border-blue-600 has-[:checked]:border-blue-500 dark:has-[:checked]:border-blue-400 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30">
+                <label className="flex items-center p-3 bg-white/70 rounded-lg border-2 border-transparent cursor-pointer transition-all hover:border-blue-300 has-[:checked]:border-blue-500[:checked]:border-blue-400 has-[:checked]:bg-blue-50[:checked]:bg-blue-900/30">
                   <input
                     type="radio"
                     value="direct"
@@ -154,15 +154,15 @@ export default function AddRankingItemModal({
                     className="mr-3 text-blue-500"
                   />
                   <div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-medium text-gray-900">
                       新規で追加
                     </span>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-xs text-gray-600">
                       まったく新しいアイテムを作成
                     </p>
                   </div>
                 </label>
-                <label className="flex items-center p-3 bg-white/70 dark:bg-gray-700/70 rounded-lg border-2 border-transparent cursor-pointer transition-all hover:border-purple-300 dark:hover:border-purple-600 has-[:checked]:border-purple-500 dark:has-[:checked]:border-purple-400 has-[:checked]:bg-purple-50 dark:has-[:checked]:bg-purple-900/30">
+                <label className="flex items-center p-3 bg-white/70 rounded-lg border-2 border-transparent cursor-pointer transition-all hover:border-purple-300 has-[:checked]:border-purple-500[:checked]:border-purple-400 has-[:checked]:bg-purple-50[:checked]:bg-purple-900/30">
                   <input
                     type="radio"
                     value="existing"
@@ -175,10 +175,10 @@ export default function AddRankingItemModal({
                     className="mr-3 text-purple-500"
                   />
                   <div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-medium text-gray-900">
                       小カテゴリから選択
                     </span>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-xs text-gray-600">
                       既存のアイテムを参照
                     </p>
                   </div>
@@ -189,13 +189,13 @@ export default function AddRankingItemModal({
 
           {isMainCategoryView && addMode === "existing" && subCategories && (
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium mb-2 text-gray-700">
                 小カテゴリを選択
               </label>
               <select
                 value={selectedSubCategoryId}
                 onChange={(e) => setSelectedSubCategoryId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900"
               >
                 <option value="">小カテゴリを選択してください</option>
                 {subCategories.map((subCat) => (
@@ -209,19 +209,19 @@ export default function AddRankingItemModal({
 
           {addMode === "existing" && selectedSubCategoryId && (
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium mb-2 text-gray-700">
                 既存項目を選択
               </label>
               {isLoadingItems ? (
-                <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-4 text-gray-500">
                   項目を読み込み中...
                 </div>
               ) : existingItems.length > 0 ? (
-                <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md">
+                <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-md">
                   {existingItems.map((item) => (
                     <label
                       key={item.id}
-                      className="flex items-start p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-600 last:border-b-0"
+                      className="flex items-start p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-200 last:border-b-0"
                     >
                       <input
                         type="radio"
@@ -233,11 +233,11 @@ export default function AddRankingItemModal({
                         className="mr-3 mt-1"
                       />
                       <div>
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        <div className="text-sm font-medium text-gray-900">
                           {item.title}
                         </div>
                         {item.description && (
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <div className="text-xs text-gray-500 mt-1">
                             {item.description}
                           </div>
                         )}
@@ -246,7 +246,7 @@ export default function AddRankingItemModal({
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-4 text-gray-500">
                   この小カテゴリには項目がありません
                 </div>
               )}
@@ -256,7 +256,7 @@ export default function AddRankingItemModal({
           {addMode !== "existing" && (
             <>
               <div className="mb-6">
-                <label className="block text-sm font-semibold mb-3 text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                <label className="block text-sm font-semibold mb-3 text-purple-700 flex items-center gap-2">
                   <span>🏷️</span>
                   タイトル
                 </label>
@@ -264,14 +264,14 @@ export default function AddRankingItemModal({
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-purple-200 dark:border-purple-700 rounded-xl bg-white/80 dark:bg-gray-700/80 text-gray-900 dark:text-white focus:border-purple-400 dark:focus:border-purple-500 focus:ring-0 transition-all backdrop-blur-sm"
+                  className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl bg-white/80 text-gray-900 focus:border-purple-400 focus:ring-0 transition-all backdrop-blur-sm"
                   placeholder="例: 東京スカイツリー"
                   autoFocus
                 />
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-semibold mb-3 text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                <label className="block text-sm font-semibold mb-3 text-purple-700 flex items-center gap-2">
                   <span>📝</span>
                   説明
                 </label>
@@ -279,13 +279,13 @@ export default function AddRankingItemModal({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 border-2 border-purple-200 dark:border-purple-700 rounded-xl bg-white/80 dark:bg-gray-700/80 text-gray-900 dark:text-white focus:border-purple-400 dark:focus:border-purple-500 focus:ring-0 transition-all backdrop-blur-sm resize-none"
+                  className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl bg-white/80 text-gray-900 focus:border-purple-400 focus:ring-0 transition-all backdrop-blur-sm resize-none"
                   placeholder="例: 世界一高い電波塔で、景色が素晴らしい... ✨"
                 />
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-semibold mb-3 text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                <label className="block text-sm font-semibold mb-3 text-purple-700 flex items-center gap-2">
                   <span>🔗</span>
                   リンク
                 </label>
@@ -293,13 +293,13 @@ export default function AddRankingItemModal({
                   type="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-purple-200 dark:border-purple-700 rounded-xl bg-white/80 dark:bg-gray-700/80 text-gray-900 dark:text-white focus:border-purple-400 dark:focus:border-purple-500 focus:ring-0 transition-all backdrop-blur-sm"
+                  className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl bg-white/80 text-gray-900 focus:border-purple-400 focus:ring-0 transition-all backdrop-blur-sm"
                   placeholder="https://example.com"
                 />
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-semibold mb-3 text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                <label className="block text-sm font-semibold mb-3 text-purple-700 flex items-center gap-2">
                   <span>🖼️</span>
                   画像
                 </label>
@@ -307,16 +307,16 @@ export default function AddRankingItemModal({
                   type="url"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-purple-200 dark:border-purple-700 rounded-xl bg-white/80 dark:bg-gray-700/80 text-gray-900 dark:text-white focus:border-purple-400 dark:focus:border-purple-500 focus:ring-0 transition-all backdrop-blur-sm"
+                  className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl bg-white/80 text-gray-900 focus:border-purple-400 focus:ring-0 transition-all backdrop-blur-sm"
                   placeholder="https://example.com/image.jpg"
                 />
                 {imageUrl && (
-                  <div className="mt-4 p-3 bg-purple-50/50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-700">
-                    <p className="text-xs text-purple-600 dark:text-purple-400 mb-2 font-medium">プレビュー:</p>
+                  <div className="mt-4 p-3 bg-purple-50/50 rounded-xl border border-purple-200">
+                    <p className="text-xs text-purple-600 mb-2 font-medium">プレビュー:</p>
                     <img
                       src={imageUrl}
                       alt="プレビュー"
-                      className="w-32 h-32 object-cover rounded-xl border-2 border-purple-200 dark:border-purple-600 shadow-md"
+                      className="w-32 h-32 object-cover rounded-xl border-2 border-purple-200 shadow-md"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                       }}
@@ -327,11 +327,11 @@ export default function AddRankingItemModal({
             </>
           )}
 
-          <div className="flex gap-3 justify-end pt-6 border-t border-purple-200 dark:border-purple-700">
+          <div className="flex gap-3 justify-end pt-6 border-t border-purple-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl font-semibold transition-all transform hover:scale-105"
+              className="px-6 py-3 text-purple-600 hover:bg-purple-100 rounded-xl font-semibold transition-all transform hover:scale-105"
               disabled={isLoading}
             >
               キャンセル
