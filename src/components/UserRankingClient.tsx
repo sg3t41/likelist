@@ -1250,17 +1250,15 @@ export default function UserRankingClient({
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* ユーザープロフィールセクション */}
-        {!selectedCategory && !isMainCategoryView && (
-          <UserProfileSection 
-            pageUser={pageUser}
-            categoryCount={allCategories.length}
-            itemCount={allCategories.reduce((total, cat) => {
-              return total + (cat.subCategories?.reduce((subTotal: number, sub: any) => {
-                return subTotal + (sub._count?.rankingItems || 0);
-              }, 0) || 0);
-            }, 0)}
-          />
-        )}
+        <UserProfileSection 
+          pageUser={pageUser}
+          categoryCount={allCategories.length}
+          itemCount={allCategories.reduce((total, cat) => {
+            return total + (cat.subCategories?.reduce((subTotal: number, sub: any) => {
+              return subTotal + (sub._count?.rankingItems || 0);
+            }, 0) || 0);
+          }, 0)}
+        />
 
         <div className="flex gap-8">
           {/* サイドバー（デスクトップ）- ファイラ風デザイン */}
