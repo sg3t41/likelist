@@ -1704,6 +1704,7 @@ export default function UserRankingClient({
                                   fill
                                   className="object-cover group-hover/image:scale-110 transition-transform duration-300"
                                   sizes="(max-width: 768px) 128px, 128px"
+                                  unoptimized
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
                                   }}

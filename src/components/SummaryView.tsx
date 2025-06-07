@@ -172,6 +172,7 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-300"
                       sizes="64px"
+                      unoptimized
                     />
                   </div>
                 )}
