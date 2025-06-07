@@ -12,28 +12,41 @@ export default async function Home() {
     const userId = (currentUser as any).userId;
     const username = (currentUser as any).username;
     
+    console.log("Home page: currentUser found", { userId, username, email: currentUser.email });
+    
+    // userIdとusernameの両方をチェック
+    let dbUser = null;
+    
     if (userId) {
       // ユーザーIDがある場合はDBで確認
-      const dbUser = await prisma.user.findUnique({
+      dbUser = await prisma.user.findUnique({
         where: { id: userId }
       });
-      
-      if (dbUser) {
-        redirect(`/u/${userId}`);
-      }
-    } else if (username) {
-      // ユーザーIDがないがusernameがある場合（旧セッション対応）
-      const dbUser = await prisma.user.findUnique({
-        where: { username }
-      });
-      
-      if (dbUser) {
-        redirect(`/u/${dbUser.id}`);
-      }
+      console.log("Home page: Found user by ID", !!dbUser);
     }
     
-    // セッションはあるがDBにユーザーが見つからない場合は、
-    // ログアウトせずにHomeClientを表示（再ログインを促す）
+    if (!dbUser && username) {
+      // ユーザーIDでの検索に失敗した場合、usernameで検索
+      dbUser = await prisma.user.findUnique({
+        where: { username }
+      });
+      console.log("Home page: Found user by username", !!dbUser);
+    }
+    
+    if (!dbUser && currentUser.email) {
+      // それでも見つからない場合、emailで検索（最終手段）
+      dbUser = await prisma.user.findUnique({
+        where: { email: currentUser.email }
+      });
+      console.log("Home page: Found user by email", !!dbUser);
+    }
+    
+    if (dbUser) {
+      console.log("Home page: Redirecting to", `/u/${dbUser.id}`);
+      redirect(`/u/${dbUser.id}`);
+    } else {
+      console.log("Home page: No DB user found, showing HomeClient with currentUser");
+    }
   }
   
   // 未ログインまたはセッションが無効な場合
