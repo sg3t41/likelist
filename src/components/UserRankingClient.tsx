@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import AddCategoryModal from "@/components/AddCategoryModal";
 import AddSubCategoryModal from "@/components/AddSubCategoryModal";
 import AddRankingItemModal from "@/components/AddRankingItemModal";
@@ -9,6 +10,7 @@ import EditRankingItemModal from "@/components/EditRankingItemModal";
 import UserRankingHeader from "@/components/UserRankingHeader";
 import ImageModal from "@/components/ImageModal";
 import RankingSkeleton from "@/components/RankingSkeleton";
+import Breadcrumb from "@/components/Breadcrumb";
 
 type PageUser = {
   id: string;
@@ -955,6 +957,39 @@ export default function UserRankingClient({
     );
   };
 
+  // パンくずリスト生成
+  const generateBreadcrumbItems = () => {
+    const userName = pageUser.name || `@${pageUser.username}` || "ユーザー";
+    const items = [
+      {
+        name: "すきなものリスト",
+        href: "/",
+      },
+      {
+        name: `${userName}のリスト`,
+        href: `/u/${pageUser.id}`,
+      },
+    ];
+
+    if (isMainCategoryView && selectedMainCategory) {
+      items.push({
+        name: selectedMainCategory,
+        current: true,
+      });
+    } else if (selectedCategory && selectedMainCategory) {
+      items.push({
+        name: selectedMainCategory,
+        href: `/u/${pageUser.id}`,
+      });
+      items.push({
+        name: selectedCategory,
+        current: true,
+      });
+    }
+
+    return items;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative">
       {/* 背景装飾 */}
@@ -968,6 +1003,16 @@ export default function UserRankingClient({
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
       />
+
+      {/* パンくずリスト */}
+      {(selectedCategory || isMainCategoryView) && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <Breadcrumb 
+            items={generateBreadcrumbItems()} 
+            className="bg-white/80 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm"
+          />
+        </div>
+      )}
 
       {/* ハンバーガーメニュー */}
       <div
@@ -1550,10 +1595,12 @@ export default function UserRankingClient({
                                 className="relative overflow-hidden rounded-xl border-2 border-purple-200 w-32 h-32 cursor-pointer hover:border-purple-400 transition-all transform hover:scale-105 shadow-md hover:shadow-lg group/image"
                                 onClick={() => setSelectedImageModal({url: item.images[0].url, alt: `${item.title} - 画像`})}
                               >
-                                <img
+                                <Image
                                   src={item.images[0].url}
                                   alt={`${item.title} - 画像`}
-                                  className="w-full h-full object-cover group-hover/image:scale-110 transition-transform duration-300"
+                                  fill
+                                  className="object-cover group-hover/image:scale-110 transition-transform duration-300"
+                                  sizes="(max-width: 768px) 128px, 128px"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
                                   }}

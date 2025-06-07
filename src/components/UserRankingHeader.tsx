@@ -3,6 +3,7 @@
 import { signIn, signOut } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 type User = {
   id: string;
@@ -53,20 +54,25 @@ export default function UserRankingHeader({
             </button>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 relative">
-                <img
-                  src={pageUser.image || `https://unavatar.io/twitter/${pageUser.username}`}
-                  alt={`@${pageUser.username}`}
-                  className="w-10 h-10 rounded-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const fallback = target.nextElementSibling as HTMLElement;
-                    if (fallback) fallback.style.display = 'flex';
-                  }}
-                />
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ display: 'none' }}>
-                  {(pageUser.username || pageUser.name || 'U').charAt(0).toUpperCase()}
-                </div>
+                {pageUser.image ? (
+                  <Image
+                    src={pageUser.image}
+                    alt={`@${pageUser.username}`}
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {(pageUser.username || pageUser.name || 'U').charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
               <div className="flex flex-col">
                 <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -92,10 +98,12 @@ export default function UserRankingHeader({
                   className="flex items-center gap-2 p-2 rounded-md hover:bg-white/50 transition-all"
                 >
                   {currentUser.image && (
-                    <img
+                    <Image
                       src={currentUser.image}
                       alt={currentUser.name || ''}
-                      className="w-8 h-8 rounded-full"
+                      width={32}
+                      height={32}
+                      className="rounded-full object-cover"
                     />
                   )}
                 </button>
