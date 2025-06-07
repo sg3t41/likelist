@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
           position: item.position,
           user: item.user,
           isReference: false,
+          isPinned: item.isPinned,
         })),
         ...references.map(ref => {
           // アイテムが削除されている場合（実際のアイテムが存在しないか、削除マークされている場合）
@@ -105,6 +106,7 @@ export async function GET(request: NextRequest) {
             referenceId: ref.id,
             sourceSubCategoryName: ref.rankingItem.subCategory?.name,
             sourceSubCategoryId: ref.rankingItem.subCategory?.id,
+            isPinned: ref.rankingItem.isPinned,
           };
         }),
       ].sort((a, b) => (a.position || 999) - (b.position || 999));

@@ -52,9 +52,9 @@ export default function UserRankingHeader({
                 />
               </svg>
             </button>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-fredoka)' }}>
+            <a href="/" className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer" style={{ fontFamily: 'var(--font-fredoka)' }}>
               すきなものリスト
-            </h1>
+            </a>
           </div>
           
           <div className="flex items-center gap-4">

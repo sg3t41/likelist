@@ -16,7 +16,7 @@ export async function PUT(
     }
 
     const userId = (session.user as any).userId;
-    const { title, description, url, position } = await request.json();
+    const { title, description, url, position, isPinned } = await request.json();
 
     if (!title) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -92,6 +92,7 @@ export async function PUT(
         description: description || null,
         url: url || null,
         position: position || null,
+        isPinned: isPinned !== undefined ? isPinned : undefined,
       },
       include: {
         user: {

@@ -62,6 +62,7 @@ model RankingItem {
   description     String?
   url             String?   // リンクURL
   position        Int?      // 順位を保持（小カテゴリでの順位）
+  isPinned        Boolean   @default(false)  // ピン留めフラグ
   subCategoryId   String?
   subCategory     SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
   mainCategoryId  String?   // 直接大カテゴリに作成された項目用

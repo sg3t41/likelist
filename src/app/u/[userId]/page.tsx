@@ -358,6 +358,7 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         url: item.url,
         images: item.images?.slice(0, 1) || [],
         position: item.position || 999,
+        isPinned: item.isPinned,
         isReference: false,
       })),
       ...references.map((ref) => ({
@@ -369,6 +370,7 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         position: ref.position || 999,
         sourceSubCategoryName: ref.rankingItem.subCategory?.name,
         sourceSubCategoryId: ref.rankingItem.subCategoryId,
+        isPinned: ref.rankingItem.isPinned,
         isReference: true,
         referenceId: ref.id,
       })),
@@ -409,6 +411,7 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         url: item.url,
         images: item.images?.slice(0, 1) || [],
         position: item.position || (index + 1), // positionがnullの場合はインデックス+1を使用
+        isPinned: item.isPinned,
       })),
     };
   }
