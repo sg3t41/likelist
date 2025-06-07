@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ["twitter.com", "api.twitter.com"],
+      allowedOrigins: ["twitter.com", "api.twitter.com", "sukilist.jp"],
     },
   },
 };

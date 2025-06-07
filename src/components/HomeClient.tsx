@@ -25,7 +25,7 @@ export default function HomeClient({ currentUser }: HomeClientProps) {
           </div>
           
           <h2 className="text-4xl font-extrabold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            好きなものリスト
+            すきなものリスト
           </h2>
           <p className="mt-2 text-lg text-gray-600">
             {currentUser 

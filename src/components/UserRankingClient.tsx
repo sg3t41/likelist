@@ -1086,7 +1086,7 @@ export default function UserRankingClient({
                   )}
                 </div>
                 {expandedCategories.has(mainCat.id) && (
-                  <div className="ml-6 mt-2 space-y-1 border-l-2 border-gradient-to-b from-purple-200 to-pink-200 pl-3">
+                  <div className="ml-6 mt-2 space-y-1 border-l-2 border-purple-200 pl-3">
                     {mainCat.subCategories.map((subCat: any) => (
                       <div key={subCat.id} className="flex items-center group">
                         <button

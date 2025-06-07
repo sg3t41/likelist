@@ -72,7 +72,7 @@ export default function UserRankingHeader({
                 <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                   <span>{pageUser.name || `@${pageUser.username}`} の</span>
                   <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent font-extrabold" style={{ fontFamily: 'var(--font-fredoka)' }}>
-                    好きなものリスト
+                    すきなものリスト
                   </span>
                 </h1>
                 {pageUser.name && (

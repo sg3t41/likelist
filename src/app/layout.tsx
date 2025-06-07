@@ -27,8 +27,21 @@ const comfortaa = Comfortaa({
 });
 
 export const metadata: Metadata = {
-  title: "ランキング11(仮)",
-  description: "みんなで作るランキングサイト",
+  title: "すきなものリスト",
+  description: "あなたの好きなものを整理してシェアしよう",
+  metadataBase: new URL('https://sukilist.jp'),
+  openGraph: {
+    title: "すきなものリスト",
+    description: "あなたの好きなものを整理してシェアしよう",
+    url: "https://sukilist.jp",
+    siteName: "すきなものリスト",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "すきなものリスト",
+    description: "あなたの好きなものを整理してシェアしよう",
+  },
 };
 
 export default function RootLayout({
