@@ -24,7 +24,35 @@ interface BreadcrumbProps {
 export default function Breadcrumb({ items, className = "", pageUser, allCategories }: BreadcrumbProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [breadcrumbItems, setBreadcrumbItems] = useState<BreadcrumbItem[]>([]);
+  
+  // 初期状態を設定してレイアウトシフトを防ぐ
+  const getInitialItems = () => {
+    const initialItems: BreadcrumbItem[] = [
+      { name: "ホーム", href: "/" }
+    ];
+    
+    // パス情報から初期項目を構築
+    if (pathname.startsWith("/u/") && pageUser) {
+      initialItems.push({
+        name: pageUser.name || pageUser.username || "ユーザー",
+        href: `/u/${pageUser.id}`
+      });
+    } else if (pathname === "/contact") {
+      initialItems.push({ name: "お問い合わせ", current: true });
+    } else if (pathname === "/privacy") {
+      initialItems.push({ name: "プライバシーポリシー", current: true });
+    } else if (pathname === "/terms") {
+      initialItems.push({ name: "利用規約", current: true });
+    } else if (pathname === "/disclaimer") {
+      initialItems.push({ name: "免責事項", current: true });
+    }
+    
+    return initialItems;
+  };
+  
+  const [breadcrumbItems, setBreadcrumbItems] = useState<BreadcrumbItem[]>(
+    items || getInitialItems()
+  );
 
   useEffect(() => {
     if (items) {

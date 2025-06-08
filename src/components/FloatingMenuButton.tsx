@@ -32,6 +32,7 @@ export default function FloatingMenuButton({
   const router = useRouter();
   const { data: session } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const isVisible = useScrollHeader();
 
   return (
@@ -104,19 +105,13 @@ export default function FloatingMenuButton({
                       title={`${category.name}のページを表示`}
                     >
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-                        <span className="text-white text-sm">📂</span>
+                        <span className="text-white text-sm">⭐</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <span className="font-medium text-gray-900 truncate group-hover:text-purple-700 transition-colors block">
                           {category.name}
                         </span>
-                        <span className="text-xs text-gray-500">
-                          クリックでページを表示
-                        </span>
                       </div>
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                        {category.subCategories?.length || 0}
-                      </span>
                     </button>
                     
                     {/* 右側のボタンエリア */}
@@ -203,46 +198,58 @@ export default function FloatingMenuButton({
               {/* ユーザー情報とアクション */}
               {session?.user ? (
                 <>
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    {(session.user as any).image && (
-                      <Image
-                        src={(session.user as any).image}
-                        alt={(session.user as any).name || ''}
-                        width={40}
-                        height={40}
-                        className="rounded-full object-cover"
-                      />
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg w-full hover:bg-gray-100 transition-colors"
+                    >
+                      {(session.user as any).image && (
+                        <Image
+                          src={(session.user as any).image}
+                          alt={(session.user as any).name || ''}
+                          width={40}
+                          height={40}
+                          className="rounded-full object-cover"
+                        />
+                      )}
+                      <div className="text-left flex-1">
+                        <p className="font-medium text-gray-900">
+                          {(session.user as any).name || (session.user as any).username}
+                        </p>
+                        <p className="text-sm text-gray-600">ログイン中</p>
+                      </div>
+                      <svg className={`w-5 h-5 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {/* ユーザーメニューポップアップ */}
+                    {showUserMenu && (
+                      <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+                        <button
+                          onClick={() => {
+                            router.push(`/u/${(session.user as any).userId}`);
+                            setIsMenuOpen(false);
+                          }}
+                          className="flex items-center gap-3 w-full p-3 text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          マイリスト
+                        </button>
+                        <button
+                          onClick={() => signOut()}
+                          className="flex items-center gap-3 w-full p-3 text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                          ログアウト
+                        </button>
+                      </div>
                     )}
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {(session.user as any).name || (session.user as any).username}
-                      </p>
-                      <p className="text-sm text-gray-600">ログイン中</p>
-                    </div>
                   </div>
-
-                  <button
-                    onClick={() => {
-                      router.push(`/u/${(session.user as any).userId}`);
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    マイリスト
-                  </button>
-
-                  <button
-                    onClick={() => signOut()}
-                    className="flex items-center gap-3 w-full p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    ログアウト
-                  </button>
                 </>
               ) : (
                 <button

@@ -1687,15 +1687,13 @@ export default function UserRankingClient({
                       className={`px-3 sm:px-6 py-4 sm:py-5 flex items-center justify-between transition-all duration-300 group hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-pink-50/50 relative ${
                         highlightPosition === index + 1
                           ? 'bg-gradient-to-r from-purple-100 to-pink-100 ring-2 ring-inset ring-purple-400 shadow-lg'
-                          : item?.isPinned
-                          ? 'bg-amber-50 border-l-4 border-amber-400'
                           : item ? 'hover:shadow-md' : ''
                       }`}
                       // タッチイベントハンドラーを完全に削除
                     >
                       {/* ピン留めバッジ */}
                       {item?.isPinned && (
-                        <div className="absolute top-2 right-2 bg-amber-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg animate-pulse">
+                        <div className="absolute top-2 right-2 bg-gray-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg">
                           <span className="text-sm">📌</span>
                         </div>
                       )}
@@ -1737,7 +1735,7 @@ export default function UserRankingClient({
                               }`}
                             >
                               {item.isPinned && (
-                                <span className="text-amber-500" title="ピン留め中">📌</span>
+                                <span className="text-gray-600" title="ピン留め中">📌</span>
                               )}
                               <span className="break-words">{item.title}</span>
                             </a>
@@ -1752,7 +1750,7 @@ export default function UserRankingClient({
                               {item ? (
                                 <>
                                   {item.isPinned && (
-                                    <span className="text-amber-500" title="ピン留め中">📌</span>
+                                    <span className="text-gray-600" title="ピン留め中">📌</span>
                                   )}
                                   <span className="break-words">{item.title}</span>
                                 </>
