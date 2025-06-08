@@ -555,6 +555,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
   }, [highlightPosition]);
 
   // クリック外でメニューを閉じる
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isRankingMenuOpen && !(event.target as Element).closest('.ranking-menu-container')) {

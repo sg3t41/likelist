@@ -4,6 +4,7 @@ import { signIn, signOut } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useScrollHeader } from "@/hooks/useScrollHeader";
 
 type User = {
   id: string;
@@ -28,10 +29,13 @@ export default function UserRankingHeader({
 }: UserRankingHeaderProps) {
   const router = useRouter();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const isVisible = useScrollHeader();
 
   return (
-    <header className="bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className={`bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100 sticky top-0 z-40 transition-transform duration-300 ease-in-out ${
+      isVisible ? 'translate-y-0' : '-translate-y-full'
+    }`}>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-4">
             <button

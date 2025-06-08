@@ -117,9 +117,10 @@ export default function Breadcrumb({ items, className = "", pageUser, allCategor
   }
 
   return (
-    <nav className={`bg-white/80 backdrop-blur-sm border-b border-gray-100 ${className}`} aria-label="パンくずリスト">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <ol role="list" className="flex items-center space-x-2 py-3 text-sm">
+    <nav className={`${className}`} aria-label="パンくずリスト">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100">
+          <ol role="list" className="flex items-center space-x-2 py-3 text-sm px-4 sm:px-6 lg:px-8">
           {breadcrumbItems.map((item, index) => (
             <li key={index} className="flex items-center">
               {index > 0 && (
@@ -159,6 +160,7 @@ export default function Breadcrumb({ items, className = "", pageUser, allCategor
             </li>
           ))}
         </ol>
+        </div>
       </div>
     </nav>
   );

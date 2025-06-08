@@ -1,6 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { useScrollHeader } from "@/hooks/useScrollHeader";
 
 interface HomeClientProps {
   currentUser?: any;
@@ -8,12 +9,15 @@ interface HomeClientProps {
 
 export default function HomeClient({ currentUser }: HomeClientProps) {
   const username = currentUser ? (currentUser as any).username : null;
+  const isVisible = useScrollHeader();
   
   return (
     <>
       {/* シンプルなヘッダー */}
-      <header className="bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className={`bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100 sticky top-0 z-40 transition-transform duration-300 ease-in-out ${
+        isVisible ? 'translate-y-0' : '-translate-y-full'
+      }`}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-fredoka)' }}>
               すきなものリスト
