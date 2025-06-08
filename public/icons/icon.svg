@@ -1,0 +1,11 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="96" fill="url(#gradient)"/>
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#EC4899"/>
+    </linearGradient>
+  </defs>
+  <!-- Heart icon representing "すきなもの" (favorite things) -->
+  <path d="M256 448l-30.164-27.211C118.718 322.442 64 272.07 64 206.32 64 154.52 105.52 112 157.32 112c27.936 0 54.738 12.194 72.68 32.016C247.942 124.194 274.744 112 302.68 112 354.48 112 396 154.52 396 206.32c0 65.75-54.718 116.122-161.836 214.469L256 448z" fill="white"/>
+</svg>
