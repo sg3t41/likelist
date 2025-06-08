@@ -1,6 +1,62 @@
+"use client";
+
 import Link from "next/link";
+import { useState, useEffect } from "react";
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 export default function Footer() {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    // Service Worker の登録
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => {})
+        .catch(() => {});
+    }
+
+    // PWA インストールプロンプトの監視
+    const handleBeforeInstallPrompt = (e: Event) => {
+      const event = e as BeforeInstallPromptEvent;
+      e.preventDefault();
+      setDeferredPrompt(event);
+    };
+
+    // インストール完了の監視
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+    };
+
+    // 既にインストール済みかチェック
+    const checkIfInstalled = () => {
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        setIsInstalled(true);
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    checkIfInstalled();
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    setDeferredPrompt(null);
+  };
   return (
     <footer className="bg-white/80 backdrop-blur-sm border-t border-gray-200 mt-12">
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -57,12 +113,30 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* その他 */}
+          {/* アプリ・サポート */}
           <div>
             <h4 className="text-md font-semibold text-gray-800 mb-4">
-              サポート
+              アプリ・サポート
             </h4>
             <ul className="space-y-2">
+              {/* PWAインストールボタン - モバイルでのみ表示 */}
+              {!isInstalled && deferredPrompt && (
+                <li>
+                  <button
+                    onClick={handleInstallClick}
+                    className="flex items-center gap-2 text-gray-600 hover:text-purple-600 text-sm transition-colors group"
+                  >
+                    <span className="text-purple-500 group-hover:text-purple-700">📱</span>
+                    アプリをインストール
+                  </button>
+                </li>
+              )}
+              {isInstalled && (
+                <li className="flex items-center gap-2 text-green-600 text-sm">
+                  <span>✅</span>
+                  アプリインストール済み
+                </li>
+              )}
               <li>
                 <Link 
                   href="/contact" 

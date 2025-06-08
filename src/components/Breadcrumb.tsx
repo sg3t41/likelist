@@ -102,11 +102,13 @@ export default function Breadcrumb({ items, className = "", pageUser, allCategor
             }
           }
           
+          const mainCategoryHref = targetMainCategoryId 
+            ? `/u/${pageUser.id}?mainCategoryId=${targetMainCategoryId}&mainCategory=${encodeURIComponent(mainCategory)}&view=main`
+            : `/u/${pageUser.id}?mainCategory=${encodeURIComponent(mainCategory)}&view=main`;
+          
           newItems.push({
             name: mainCategory,
-            href: targetMainCategoryId 
-              ? `/u/${pageUser.id}?mainCategoryId=${targetMainCategoryId}&mainCategory=${encodeURIComponent(mainCategory)}&view=main`
-              : `/u/${pageUser.id}?mainCategory=${encodeURIComponent(mainCategory)}&view=main`
+            href: mainCategoryHref
           });
           newItems.push({
             name: subCategory,

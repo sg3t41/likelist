@@ -3,7 +3,6 @@ import { Geist, Geist_Mono, Fredoka, Comfortaa } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import Footer from "@/components/Footer";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -86,7 +85,6 @@ export default function RootLayout({
             </main>
             <Footer />
           </div>
-          <PWAInstallPrompt />
         </AuthProvider>
       </body>
     </html>

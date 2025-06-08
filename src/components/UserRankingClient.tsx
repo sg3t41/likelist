@@ -76,6 +76,7 @@ export default function UserRankingClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   
+  
   // 現在のユーザーがページの所有者かどうか
   const isOwner = currentUser && currentUser.userId === pageUser.id;
 
@@ -214,13 +215,16 @@ export default function UserRankingClient({
   
   // URL変更の監視（初期化後）
   useEffect(() => {
-    if (!isInitialized) return;
+    if (!isInitialized) {
+      return;
+    }
     
     const mainCategoryParam = searchParams.get('mainCategory');
     const subCategoryParam = searchParams.get('subCategory');
     const subCategoryIdParam = searchParams.get('subCategoryId');
     const mainCategoryIdParam = searchParams.get('mainCategoryId');
     const viewParam = searchParams.get('view');
+    
     
     if (subCategoryIdParam && subCategoryParam && mainCategoryParam) {
       // 小カテゴリナビゲーション
@@ -286,8 +290,8 @@ export default function UserRankingClient({
         
         fetchMainCategoryRankings(mainCat.id);
       }
-    } else if (!mainCategoryParam && !subCategoryParam && !viewParam) {
-      // トップページに戻る
+    } else {
+      // トップページに戻る（URLパラメータがない場合）
       setSelectedMainCategory("");
       setSelectedCategory("");
       setSelectedSubCategoryId('');
@@ -1266,23 +1270,6 @@ export default function UserRankingClient({
               )}
             </div>
             
-            {/* Show All / Clear Selection button */}
-            <div className="mb-4">
-              <button
-                onClick={() => {
-                  clearSelectionAndNavigateToTop();
-                  setIsMenuOpen(false);
-                }}
-                className={`w-full text-left transition-all px-3 py-2.5 rounded-xl flex items-center gap-2 group-hover:shadow-md transform hover:scale-[1.02] ${
-                  !selectedCategory && !isMainCategoryView
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
-                    : "bg-gradient-to-r from-green-50 to-emerald-50 text-gray-700 hover:from-green-100 hover:to-emerald-100"
-                }`}
-              >
-                <span className="text-base">🏠</span>
-                <span className="font-semibold text-sm">すべて表示</span>
-              </button>
-            </div>
             
             {allCategories.map((mainCat) => (
               <div key={mainCat.id} className="mb-3">
@@ -1410,20 +1397,6 @@ export default function UserRankingClient({
               )}
             </div>
             
-            {/* Show All / Clear Selection button - Desktop */}
-            <div className="mb-4">
-              <button
-                onClick={clearSelectionAndNavigateToTop}
-                className={`w-full text-left transition-all px-3 py-2.5 rounded-xl flex items-center gap-2 group-hover:shadow-md transform hover:scale-[1.02] ${
-                  !selectedCategory && !isMainCategoryView
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
-                    : "bg-gradient-to-r from-green-50 to-emerald-50 text-gray-700 hover:from-green-100 hover:to-emerald-100"
-                }`}
-              >
-                <span className="text-base">🏠</span>
-                <span className="font-semibold text-sm">すべて表示</span>
-              </button>
-            </div>
             
             {allCategories.map((mainCat) => (
               <div key={mainCat.id} className="mb-3">
