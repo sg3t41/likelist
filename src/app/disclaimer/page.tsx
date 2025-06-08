@@ -1,5 +1,18 @@
 import FloatingMenuButton from "@/components/FloatingMenuButton";
 import BreadcrumbWrapper from "@/components/BreadcrumbWrapper";
+import { Metadata } from "next";
+
+// 静的生成を強制
+export const dynamic = 'force-static'
+
+export const metadata: Metadata = {
+  title: "免責事項 | すきなものリスト",
+  description: "すきなものリストの免責事項について説明しています。",
+  openGraph: {
+    title: "免責事項 | すきなものリスト",
+    description: "すきなものリストの免責事項について説明しています。",
+  },
+};
 
 export default function DisclaimerPage() {
   return (

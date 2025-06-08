@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// キャッシュ設定: 10分間キャッシュ
+export const revalidate = 600
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -122,11 +125,14 @@ export async function GET(request: NextRequest) {
       }
     }).filter(Boolean); // nullを除外
 
-    return NextResponse.json({
+    // キャッシュヘッダーを設定
+    const response = NextResponse.json({
       items: formattedItems,
       type,
       total: formattedItems.length,
     });
+    response.headers.set('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200');
+    return response;
   } catch (error) {
     console.error("Error fetching summary:", error);
     return NextResponse.json(

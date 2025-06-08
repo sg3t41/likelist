@@ -2,6 +2,24 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import HomeClient from "@/components/HomeClient";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "すきなものリスト - あなたの好きなものを整理して、みんなとシェアしよう",
+  description: "好きなものをカテゴリ別にランキング形式で整理・公開できるサービス。アニメ、映画、音楽、本など、あなたの趣味を見つけて共有しましょう。",
+  keywords: "好きなもの, ランキング, リスト, 趣味, 共有, おすすめ, アニメ, 映画, 音楽, 本",
+  openGraph: {
+    title: "すきなものリスト",
+    description: "あなたの好きなものを整理して、みんなとシェアしよう",
+    type: "website",
+    siteName: "すきなものリスト",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "すきなものリスト",
+    description: "あなたの好きなものを整理して、みんなとシェアしよう",
+  },
+};
 
 export default async function Home() {
   // 現在のログインユーザー情報を取得

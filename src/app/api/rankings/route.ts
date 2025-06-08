@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 
+// キャッシュ設定: 5分間キャッシュ
+export const revalidate = 300
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -114,7 +117,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "SubCategory ID or MainCategory ID is required" }, { status: 400 });
     }
 
-    return NextResponse.json(rankingItems);
+    // キャッシュヘッダーを設定
+    const response = NextResponse.json(rankingItems);
+    response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    return response;
   } catch (error) {
     console.error("Error fetching ranking items:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -1,5 +1,3 @@
-"use client";
-
 interface MainTitleProps {
   className?: string;
 }
