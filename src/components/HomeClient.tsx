@@ -2,7 +2,6 @@
 
 import { signIn } from "next-auth/react";
 import FloatingMenuButton from "@/components/FloatingMenuButton";
-import MainTitle from "@/components/MainTitle";
 
 interface HomeClientProps {
   currentUser?: any;
@@ -14,10 +13,8 @@ export default function HomeClient({ currentUser }: HomeClientProps) {
   return (
     <>
       <FloatingMenuButton />
-      
-      <MainTitle />
 
-      <div className="bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center relative overflow-hidden" style={{minHeight: 'calc(100vh - 200px)'}}>
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center relative overflow-hidden">
         {/* 背景装飾 */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-pink-300/20 to-purple-300/20 rounded-full blur-3xl"></div>
