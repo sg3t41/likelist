@@ -21,7 +21,6 @@ export default function ContactForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // 実際の送信処理はここに実装
-    console.log("送信データ:", formData);
     setIsSubmitted(true);
   };
 

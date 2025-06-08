@@ -45,7 +45,6 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  console.log("PageUser data:", pageUser);
   
   // 現在のユーザーがページの所有者かどうか
   const isOwner = session?.user && (session.user as any).userId === pageUser.id;
@@ -601,8 +600,6 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                     alt={`@${pageUser.username}`}
                     className="w-10 h-10 rounded-full object-cover"
                     onError={(e) => {
-                      console.log("Failed to load avatar for username:", pageUser.username);
-                      console.log("Tried URL:", `https://unavatar.io/twitter/${pageUser.username}`);
                       // 画像の読み込みに失敗した場合はフォールバック
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
@@ -610,7 +607,6 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                       if (fallback) fallback.style.display = 'flex';
                     }}
                     onLoad={() => {
-                      console.log("Successfully loaded avatar for username:", pageUser.username);
                     }}
                   />
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ display: 'none' }}>
@@ -1155,8 +1151,6 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                       ) : isOwner ? (
                         <button
                           onClick={() => {
-                            console.log("Plus button clicked for position:", index + 1);
-                            console.log("Current state:", { selectedCategory, selectedMainCategory, isMainCategoryView, selectedSubCategoryId, selectedMainCategoryId });
                             setTargetPosition(index + 1);
                             setIsAddRankingItemModalOpen(true);
                           }}
@@ -1184,7 +1178,6 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
           isOpen={isAddCategoryModalOpen}
           onClose={() => setIsAddCategoryModalOpen(false)}
           onAdd={async (mainCategory: string, subCategories: string[]) => {
-            console.log("Adding category:", { mainCategory, subCategories });
             try {
               const response = await fetch('/api/categories', {
                 method: 'POST',
@@ -1198,7 +1191,6 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
               });
 
               if (response.ok) {
-                console.log("Category added successfully");
                 // カテゴリリストを再取得
                 const categoriesResponse = await fetch(`/api/categories?userId=${pageUser.id}`);
                 if (categoriesResponse.ok) {
@@ -1223,7 +1215,6 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
           mainCategoryId={selectedMainCategoryForAdd.id}
           mainCategoryName={selectedMainCategoryForAdd.name}
           onAdd={async (subCategoryName: string) => {
-            console.log("Adding subcategory:", { subCategoryName, mainCategoryId: selectedMainCategoryForAdd.id });
             try {
               const response = await fetch(`/api/categories/${selectedMainCategoryForAdd.id}/subcategories`, {
                 method: 'POST',
@@ -1236,7 +1227,6 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
               });
 
               if (response.ok) {
-                console.log("Subcategory added successfully");
                 // カテゴリリストを再取得
                 const categoriesResponse = await fetch(`/api/categories?userId=${pageUser.id}`);
                 if (categoriesResponse.ok) {
@@ -1262,7 +1252,6 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
           isMainCategoryView={isMainCategoryView}
           subCategories={isMainCategoryView ? allCategories.find(cat => cat.id === selectedMainCategoryId)?.subCategories : undefined}
           onAdd={async (title: string, description: string, subCategoryId?: string, existingItemId?: string) => {
-            console.log("onAdd called with:", { title, description, subCategoryId, existingItemId, targetPosition, isMainCategoryView, selectedMainCategoryId, selectedSubCategoryId });
             try {
               const response = await fetch('/api/rankings', {
                 method: 'POST',
@@ -1279,9 +1268,7 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
                 }),
               });
 
-              console.log("API response status:", response.status);
               if (response.ok) {
-                console.log("API call successful, refreshing rankings");
                 // ランキングを再取得
                 if (isMainCategoryView) {
                   fetchMainCategoryRankings(selectedMainCategoryId);

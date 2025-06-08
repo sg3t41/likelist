@@ -30,7 +30,6 @@ export default async function Home() {
     const userId = (currentUser as any).userId;
     const username = (currentUser as any).username;
     
-    console.log("Home page: currentUser found", { userId, username, email: currentUser.email });
     
     // userIdとusernameの両方をチェック
     let dbUser = null;
@@ -40,7 +39,6 @@ export default async function Home() {
       dbUser = await prisma.user.findUnique({
         where: { id: userId }
       });
-      console.log("Home page: Found user by ID", !!dbUser);
     }
     
     if (!dbUser && username) {
@@ -48,7 +46,6 @@ export default async function Home() {
       dbUser = await prisma.user.findUnique({
         where: { username }
       });
-      console.log("Home page: Found user by username", !!dbUser);
     }
     
     if (!dbUser && currentUser.email) {
@@ -56,14 +53,11 @@ export default async function Home() {
       dbUser = await prisma.user.findUnique({
         where: { email: currentUser.email }
       });
-      console.log("Home page: Found user by email", !!dbUser);
     }
     
     if (dbUser) {
-      console.log("Home page: Redirecting to", `/u/${dbUser.id}`);
       redirect(`/u/${dbUser.id}`);
     } else {
-      console.log("Home page: No DB user found, showing HomeClient with currentUser");
     }
   }
   

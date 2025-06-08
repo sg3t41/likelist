@@ -412,7 +412,6 @@ export default function UserRankingClient({
       const response = await fetch(`/api/rankings?mainCategoryId=${mainCategoryId}&userId=${pageUser.id}`);
       if (response.ok) {
         const items = await response.json();
-        console.log('Fetched main category items:', items); // デバッグ用
         const rankingMap: RankingMap = {};
         items.forEach((item: any) => {
           const position = item.position || Object.keys(rankingMap).length + 1;
@@ -456,7 +455,6 @@ export default function UserRankingClient({
 
       if (response.ok) {
         const updatedItem = await response.json();
-        console.log('Updated item:', updatedItem); // デバッグ用
         
         // ピン留め状態を更新
         if (item.isPinned) {
@@ -1912,8 +1910,6 @@ export default function UserRankingClient({
                       ) : isOwner ? (
                         <button
                           onClick={() => {
-                            console.log("Plus button clicked for position:", index + 1);
-                            console.log("Current state:", { selectedCategory, selectedMainCategory, isMainCategoryView, selectedSubCategoryId, selectedMainCategoryId });
                             setTargetPosition(index + 1);
                             setIsAddRankingItemModalOpen(true);
                           }}
@@ -1941,7 +1937,6 @@ export default function UserRankingClient({
           isOpen={isAddCategoryModalOpen}
           onClose={() => setIsAddCategoryModalOpen(false)}
           onAdd={async (mainCategory: string, subCategories: string[]) => {
-            console.log("Adding category:", { mainCategory, subCategories });
             try {
               const response = await fetch('/api/categories', {
                 method: 'POST',
@@ -1955,7 +1950,6 @@ export default function UserRankingClient({
               });
 
               if (response.ok) {
-                console.log("Category added successfully");
                 // カテゴリリストを再取得
                 const categoriesResponse = await fetch(`/api/categories?userId=${pageUser.id}`);
                 if (categoriesResponse.ok) {
@@ -1980,7 +1974,6 @@ export default function UserRankingClient({
           mainCategoryId={selectedMainCategoryForAdd.id}
           mainCategoryName={selectedMainCategoryForAdd.name}
           onAdd={async (subCategoryName: string) => {
-            console.log("Adding subcategory:", { subCategoryName, mainCategoryId: selectedMainCategoryForAdd.id });
             try {
               const response = await fetch(`/api/categories/${selectedMainCategoryForAdd.id}/subcategories`, {
                 method: 'POST',
@@ -1993,7 +1986,6 @@ export default function UserRankingClient({
               });
 
               if (response.ok) {
-                console.log("Subcategory added successfully");
                 // カテゴリリストを再取得
                 const categoriesResponse = await fetch(`/api/categories?userId=${pageUser.id}`);
                 if (categoriesResponse.ok) {
@@ -2019,7 +2011,6 @@ export default function UserRankingClient({
           isMainCategoryView={isMainCategoryView}
           subCategories={isMainCategoryView ? allCategories.find(cat => cat.id === selectedMainCategoryId)?.subCategories : undefined}
           onAdd={async (title: string, description: string, url?: string, subCategoryId?: string, existingItemId?: string, imageUrl?: string) => {
-            console.log("onAdd called with:", { title, description, url, subCategoryId, existingItemId, targetPosition, isMainCategoryView, selectedMainCategoryId, selectedSubCategoryId });
             
             const requestBody = {
               title,
@@ -2031,7 +2022,6 @@ export default function UserRankingClient({
               existingItemId
             };
             
-            console.log("Sending request body:", requestBody);
             
             try {
               const response = await fetch('/api/rankings', {
@@ -2042,9 +2032,7 @@ export default function UserRankingClient({
                 body: JSON.stringify(requestBody),
               });
 
-              console.log("API response status:", response.status);
               if (response.ok) {
-                console.log("API call successful, refreshing rankings");
                 
                 // 画像が指定されている場合は保存
                 if (imageUrl && imageUrl.trim() && !existingItemId) {

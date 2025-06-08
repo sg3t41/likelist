@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Fredoka, Comfortaa } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import Footer from "@/components/Footer";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,15 @@ export const metadata: Metadata = {
   title: "すきなものリスト",
   description: "あなたの好きなものを整理してシェアしよう",
   metadataBase: new URL('https://sukilist.jp'),
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "すきなものリスト",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
     title: "すきなものリスト",
     description: "あなたの好きなものを整理してシェアしよう",
@@ -43,6 +53,20 @@ export const metadata: Metadata = {
     title: "すきなものリスト",
     description: "あなたの好きなものを整理してシェアしよう",
   },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/icon-152x152.png", sizes: "152x152", type: "image/png" },
+      { url: "/icons/icon-180x180.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+};
+
+export const viewport = {
+  themeColor: "#8B5CF6",
 };
 
 export default function RootLayout({
@@ -62,6 +86,7 @@ export default function RootLayout({
             </main>
             <Footer />
           </div>
+          <PWAInstallPrompt />
         </AuthProvider>
       </body>
     </html>

@@ -53,11 +53,19 @@ const nextConfig: NextConfig = {
         hostname: "i.imgur.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "**",
+        pathname: "/**",
+      },
     ],
     formats: ["image/webp", "image/avif"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60 * 60 * 24 * 7, // 1週間
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30日間に延長
+    dangerouslyAllowSVG: false,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    unoptimized: false, // 明示的に最適化を有効化
   },
   poweredByHeader: false,
   compress: true,
