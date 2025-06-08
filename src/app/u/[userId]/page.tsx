@@ -447,6 +447,19 @@ export default async function UserPage({ params, searchParams }: PageProps) {
     }));
   }
 
+  // カテゴリ数とアイテム数を計算
+  const totalCategoryCount = await prisma.mainCategory.count({
+    where: { userId: user.id }
+  }) + await prisma.subCategory.count({
+    where: { userId: user.id }
+  });
+  
+  const totalItemCount = await prisma.rankingItem.count({
+    where: { 
+      userId: user.id
+    }
+  });
+
   return (
     <>
       <UserRankingClient
@@ -455,6 +468,8 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         initialCategories={categories}
         initialSelection={initialSelection}
         initialRankings={initialRankings}
+        totalCategoryCount={totalCategoryCount}
+        totalItemCount={totalItemCount}
       />
       <StructuredData
         user={user}

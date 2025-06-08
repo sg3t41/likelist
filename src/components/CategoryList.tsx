@@ -1,13 +1,16 @@
 "use client";
 
+import { Category } from "@/types";
+import Link from "next/link";
+
 interface CategoryListProps {
-  allCategories: any[];
+  allCategories: Category[];
   expandedCategories: Set<string>;
   setExpandedCategories: (categories: Set<string>) => void;
-  onCategorySelect?: (mainCat: any, subCat: any, subCatId: string) => void;
-  onMainCategorySelect?: (mainCat: any) => void;
+  onCategorySelect?: (mainCat: string, subCat: string, subCatId: string) => void;
+  onMainCategorySelect?: (mainCat: Category) => void;
   onAddCategory?: () => void;
-  onAddSubCategory?: (mainCat: any) => void;
+  onAddSubCategory?: (mainCat: Category) => void;
   isOwner?: boolean;
   showAddButton?: boolean;
   onMenuClose?: () => void;

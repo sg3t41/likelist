@@ -14,9 +14,9 @@ export default function BreadcrumbWrapper({ pageUser, allCategories }: Breadcrum
   return (
     <Suspense fallback={
       <nav className="sticky top-0 z-30" aria-label="パンくずリスト">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100">
-            <div className="py-3 px-4 sm:px-6 lg:px-8">
+        <div>
+          <div className="bg-white rounded-lg shadow">
+            <div className="py-4 px-8 sm:px-10">
               <div className="h-4">&nbsp;</div>
             </div>
           </div>

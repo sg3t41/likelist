@@ -2,7 +2,7 @@
  * ランキング状態管理のカスタムフック
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Rankings, InitialSelection } from '@/types';
 
 interface UseRankingStateProps {
@@ -83,6 +83,29 @@ export function useRankingState({
     item: any;
     position: number;
   } | null>(null);
+
+  // URLパラメータ変更時の状態同期
+  useEffect(() => {
+    if (initialSelection) {
+      if (initialSelection.mainCategory && selectedMainCategory !== initialSelection.mainCategory) {
+        setSelectedMainCategory(initialSelection.mainCategory);
+      }
+      if (initialSelection.subCategory && selectedCategory !== initialSelection.subCategory) {
+        setSelectedCategory(initialSelection.subCategory);
+      }
+      if (initialSelection.mainCategoryId && selectedMainCategoryId !== initialSelection.mainCategoryId) {
+        setSelectedMainCategoryId(initialSelection.mainCategoryId);
+      }
+      if (initialSelection.subCategoryId && selectedSubCategoryId !== initialSelection.subCategoryId) {
+        setSelectedSubCategoryId(initialSelection.subCategoryId);
+      }
+      if (initialSelection.view === 'main' && !isMainCategoryView) {
+        setIsMainCategoryView(true);
+      } else if (initialSelection.view !== 'main' && isMainCategoryView) {
+        setIsMainCategoryView(false);
+      }
+    }
+  }, [initialSelection, selectedMainCategory, selectedCategory, selectedMainCategoryId, selectedSubCategoryId, isMainCategoryView]);
 
   return {
     // カテゴリ選択

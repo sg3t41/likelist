@@ -1,16 +1,10 @@
 "use client";
 
 import Image from "next/image";
-
-type User = {
-  id: string;
-  name: string | null;
-  username: string | null;
-  image: string | null;
-};
+import { PageUser } from "@/types";
 
 interface UserProfileSectionProps {
-  pageUser: User;
+  pageUser: PageUser;
   categoryCount?: number;
   itemCount?: number;
 }
@@ -23,7 +17,7 @@ export default function UserProfileSection({
   const userName = pageUser.name || `@${pageUser.username}` || "ユーザー";
 
   return (
-    <div className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6 mb-6">
+    <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center gap-6">
         {/* プロフィール画像 */}
         <div className="flex-shrink-0">

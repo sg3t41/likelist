@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface BreadcrumbItem {
@@ -24,6 +24,7 @@ interface BreadcrumbProps {
 export default function Breadcrumb({ items, className = "", pageUser, allCategories }: BreadcrumbProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   
   // 初期状態を設定してレイアウトシフトを防ぐ
   const getInitialItems = () => {
@@ -148,9 +149,9 @@ export default function Breadcrumb({ items, className = "", pageUser, allCategor
 
   return (
     <nav className={`${className}`} aria-label="パンくずリスト">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100">
-          <ol role="list" className="flex items-center space-x-2 py-3 text-sm px-4 sm:px-6 lg:px-8">
+      <div>
+        <div className="bg-white rounded-lg shadow">
+          <ol role="list" className="flex items-center space-x-2 py-4 px-8 sm:px-10 text-sm">
           {breadcrumbItems.map((item, index) => (
             <li key={index} className="flex items-center">
               {index > 0 && (
@@ -171,7 +172,13 @@ export default function Breadcrumb({ items, className = "", pageUser, allCategor
               {item.href && !item.current ? (
                 <Link
                   href={item.href}
+                  prefetch={false}
                   className="text-purple-600 hover:text-purple-800 transition-colors hover:underline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    router.push(item.href!);
+                    router.refresh(); // 強制的にサーバーコンポーネントを再レンダリング
+                  }}
                 >
                   {item.name}
                 </Link>

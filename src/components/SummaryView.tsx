@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { PageUser } from "@/types";
 
 type SummaryItem = {
   id: string | number;
@@ -21,15 +22,8 @@ type SummaryItem = {
   };
 };
 
-type User = {
-  id: string;
-  name: string | null;
-  username: string | null;
-  image: string | null;
-};
-
 interface SummaryViewProps {
-  pageUser: User;
+  pageUser: PageUser;
 }
 
 export default function SummaryView({ pageUser }: SummaryViewProps) {
@@ -120,7 +114,9 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
       params.set('view', 'main');
     }
     
-    router.push(`/u/${pageUser.id}?${params.toString()}`);
+    const newUrl = `/u/${pageUser.id}?${params.toString()}`;
+    router.push(newUrl);
+    // router.refresh()を削除 - クライアントサイドで処理
   };
 
   const formatDate = (dateString: string) => {
@@ -249,7 +245,9 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          router.push(`/u/${pageUser.id}?mainCategoryId=${item.category.mainId}&mainCategory=${encodeURIComponent(item.category.main)}&view=main`);
+                          const newUrl = `/u/${pageUser.id}?mainCategoryId=${item.category.mainId}&mainCategory=${encodeURIComponent(item.category.main)}&view=main`;
+                          router.push(newUrl);
+                          // router.refresh()を削除 - クライアントサイドで処理
                         }}
                         className="text-purple-600 font-medium hover:text-purple-800 hover:underline transition-colors"
                       >
@@ -261,7 +259,9 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              router.push(`/u/${pageUser.id}?mainCategory=${encodeURIComponent(item.category.main)}&subCategory=${encodeURIComponent(item.category.sub)}&subCategoryId=${item.category.subId}`);
+                              const newUrl = `/u/${pageUser.id}?mainCategory=${encodeURIComponent(item.category.main)}&subCategory=${encodeURIComponent(item.category.sub)}&subCategoryId=${item.category.subId}`;
+                              router.push(newUrl);
+                              // router.refresh()を削除 - クライアントサイドで処理
                             }}
                             className="text-pink-600 font-medium hover:text-pink-800 hover:underline transition-colors"
                           >
