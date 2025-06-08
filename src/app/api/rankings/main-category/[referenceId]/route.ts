@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { referenceId: string } }
+  { params }: { params: Promise<{ referenceId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,11 +15,12 @@ export async function PUT(
     }
 
     const userId = (session.user as any).userId;
+    const { referenceId } = await params;
     const { position, title, description, url } = await request.json();
 
     // 参照の存在確認
     const reference = await prisma.mainCategoryItemReference.findUnique({
-      where: { id: params.referenceId },
+      where: { id: referenceId },
       include: {
         mainCategory: true,
         rankingItem: true,
@@ -51,7 +52,7 @@ export async function PUT(
 
       // 新しい位置にアイテムがあるかチェック
       const directItemAtNewPos = directItems.find(item => item.position === position);
-      const refAtNewPos = references.find(ref => ref.position === position && ref.id !== params.referenceId);
+      const refAtNewPos = references.find(ref => ref.position === position && ref.id !== referenceId);
 
       if (directItemAtNewPos) {
         // 直接作成されたアイテムと位置を入れ替える
@@ -70,7 +71,7 @@ export async function PUT(
 
     // 参照の順位を更新
     const updatedReference = await prisma.mainCategoryItemReference.update({
-      where: { id: params.referenceId },
+      where: { id: referenceId },
       data: {
         position: position || null,
       },
@@ -114,7 +115,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { referenceId: string } }
+  { params }: { params: Promise<{ referenceId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -124,10 +125,11 @@ export async function DELETE(
     }
 
     const userId = (session.user as any).userId;
+    const { referenceId } = await params;
 
     // 参照の存在確認
     const reference = await prisma.mainCategoryItemReference.findUnique({
-      where: { id: params.referenceId },
+      where: { id: referenceId },
       include: {
         mainCategory: true,
       },
@@ -144,7 +146,7 @@ export async function DELETE(
 
     // 参照を削除（元の項目は残る）
     await prisma.mainCategoryItemReference.delete({
-      where: { id: params.referenceId },
+      where: { id: referenceId },
     });
 
     return NextResponse.json({ message: "Reference deleted successfully" });

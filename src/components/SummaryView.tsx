@@ -59,6 +59,51 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
     fetchSummaryData(activeTab);
   }, [activeTab, pageUser.id]);
 
+  // ピン留め状態変更を監視（デバウンス付き）
+  useEffect(() => {
+    let debounceTimer: NodeJS.Timeout | null = null;
+
+    const handlePinChange = () => {
+      // 既存のタイマーをクリア
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+      
+      // 300ms後に実行（重複呼び出しを防ぐ）
+      debounceTimer = setTimeout(() => {
+        if (activeTab === "pinned") {
+          fetchSummaryData("pinned");
+        }
+      }, 300);
+    };
+
+    // カスタムイベントリスナーを追加
+    window.addEventListener('pinStatusChanged', handlePinChange);
+    
+    return () => {
+      window.removeEventListener('pinStatusChanged', handlePinChange);
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+    };
+  }, [activeTab]);
+
+  // ページ間移動で戻った場合の対応
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && activeTab === "pinned") {
+        // ページが表示された時にピン留めタブをリフレッシュ
+        fetchSummaryData("pinned");
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [activeTab]);
+
   const handleItemClick = (item: SummaryItem) => {
     // 小カテゴリがある場合は小カテゴリページへ、ない場合は大カテゴリページへ遷移
     const params = new URLSearchParams();

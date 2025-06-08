@@ -454,6 +454,41 @@ export default function UserRankingClient({
   };
 
   const handleTogglePin = async (item: RankingItem) => {
+    const newPinState = !item.isPinned;
+    
+    // 即座にローカル状態を更新
+    setRankings(prev => {
+      const currentKey = isMainCategoryView ? `main_${selectedMainCategoryId}` : selectedCategory;
+      const currentRankings = prev[currentKey] || {};
+      
+      // アイテムの位置を見つける
+      let itemPosition: number | null = null;
+      for (const [pos, rankingItem] of Object.entries(currentRankings)) {
+        if (rankingItem.id === item.id) {
+          itemPosition = parseInt(pos);
+          break;
+        }
+      }
+      
+      if (itemPosition) {
+        const updatedRankings = {
+          ...currentRankings,
+          [itemPosition]: {
+            ...currentRankings[itemPosition],
+            isPinned: newPinState
+          }
+        };
+        
+        return {
+          ...prev,
+          [currentKey]: updatedRankings
+        };
+      }
+      
+      return prev;
+    });
+
+    // APIコール
     try {
       const response = await fetch(`/api/rankings/${item.id}/pin`, {
         method: 'POST',
@@ -461,56 +496,80 @@ export default function UserRankingClient({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          isPinned: !item.isPinned,
+          isPinned: newPinState,
         }),
       });
 
-      if (response.ok) {
-        const updatedItem = await response.json();
-        
-        // ピン留め状態を更新
-        if (item.isPinned) {
-          setPinnedItems(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(item.id.toString());
-            return newSet;
-          });
-        } else {
-          setPinnedItems(prev => {
-            const newSet = new Set(prev);
-            newSet.add(item.id.toString());
-            return newSet;
-          });
-        }
-        
-        // 現在のカテゴリのランキングを再取得
-        if (isMainCategoryView && selectedMainCategoryId) {
-          await fetchMainCategoryRankings(selectedMainCategoryId);
-        } else if (selectedSubCategoryId) {
-          const response = await fetch(`/api/rankings?subCategoryId=${selectedSubCategoryId}&userId=${pageUser.id}`);
-          if (response.ok) {
-            const items = await response.json();
-            const rankingMap: RankingMap = {};
-            items.forEach((item: any) => {
-              const position = item.position || Object.keys(rankingMap).length + 1;
-              rankingMap[position] = {
-                id: item.id,
-                title: item.title,
-                description: item.description,
-                url: item.url,
-                images: item.images,
-                isPinned: item.isPinned
-              };
-            });
-            setRankings(prev => ({
-              ...prev,
-              [selectedCategory]: rankingMap
-            }));
+      if (!response.ok) {
+        // API呼び出しが失敗した場合、状態を元に戻す
+        setRankings(prev => {
+          const currentKey = isMainCategoryView ? `main_${selectedMainCategoryId}` : selectedCategory;
+          const currentRankings = prev[currentKey] || {};
+          
+          let itemPosition: number | null = null;
+          for (const [pos, rankingItem] of Object.entries(currentRankings)) {
+            if (rankingItem.id === item.id) {
+              itemPosition = parseInt(pos);
+              break;
+            }
           }
-        }
+          
+          if (itemPosition) {
+            const revertedRankings = {
+              ...currentRankings,
+              [itemPosition]: {
+                ...currentRankings[itemPosition],
+                isPinned: item.isPinned // 元の状態に戻す
+              }
+            };
+            
+            return {
+              ...prev,
+              [currentKey]: revertedRankings
+            };
+          }
+          
+          return prev;
+        });
+        
+        console.error("Failed to toggle pin:", response.status);
+      } else {
+        // 成功した場合、SummaryViewに変更を通知（カスタムイベントのみ）
+        window.dispatchEvent(new CustomEvent('pinStatusChanged'));
       }
     } catch (error) {
       console.error("Error toggling pin:", error);
+      
+      // エラーの場合も状態を元に戻す
+      setRankings(prev => {
+        const currentKey = isMainCategoryView ? `main_${selectedMainCategoryId}` : selectedCategory;
+        const currentRankings = prev[currentKey] || {};
+        
+        let itemPosition: number | null = null;
+        for (const [pos, rankingItem] of Object.entries(currentRankings)) {
+          if (rankingItem.id === item.id) {
+            itemPosition = parseInt(pos);
+            break;
+          }
+        }
+        
+        if (itemPosition) {
+          const revertedRankings = {
+            ...currentRankings,
+            [itemPosition]: {
+              ...currentRankings[itemPosition],
+              isPinned: item.isPinned // 元の状態に戻す
+            }
+          };
+          
+          return {
+            ...prev,
+            [currentKey]: revertedRankings
+          };
+        }
+        
+        return prev;
+      });
     }
   };
 
@@ -1652,7 +1711,7 @@ export default function UserRankingClient({
                     >
                       {/* ピン留めバッジ */}
                       {item?.isPinned && (
-                        <div className="absolute top-2 right-2 bg-gray-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg">
+                        <div className="absolute top-2 right-2 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center">
                           <span className="text-sm">📌</span>
                         </div>
                       )}
@@ -1681,7 +1740,7 @@ export default function UserRankingClient({
                         </div>
                         
                         {/* コンテンツ部分：装飾強化 */}
-                        <div className="flex-1 min-w-0">
+                        <div className={`flex-1 min-w-0 ${item?.isPinned ? 'pr-10' : ''}`}>
                           {item?.url && !item?.isDeleted ? (
                             <a
                               href={item.url}
@@ -1693,9 +1752,6 @@ export default function UserRankingClient({
                                   : "text-purple-700 hover:text-purple-800 group-hover:scale-[1.02]"
                               }`}
                             >
-                              {item.isPinned && (
-                                <span className="text-gray-600" title="ピン留め中">📌</span>
-                              )}
                               <span className="break-words">{item.title}</span>
                             </a>
                           ) : (
@@ -1707,12 +1763,7 @@ export default function UserRankingClient({
                                 : "text-gray-400"
                             }`}>
                               {item ? (
-                                <>
-                                  {item.isPinned && (
-                                    <span className="text-gray-600" title="ピン留め中">📌</span>
-                                  )}
-                                  <span className="break-words">{item.title}</span>
-                                </>
+                                <span className="break-words">{item.title}</span>
                               ) : (
                                 <span className="italic">空きスロット</span>
                               )}
