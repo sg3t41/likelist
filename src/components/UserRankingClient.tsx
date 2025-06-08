@@ -1610,7 +1610,7 @@ export default function UserRankingClient({
                     <div
                       id={`ranking-item-${index + 1}`}
                       key={item?.id || `empty-${index}`}
-                      className={`px-6 py-5 flex items-center justify-between transition-all duration-300 group hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-pink-50/50 relative ${
+                      className={`px-3 sm:px-6 py-4 sm:py-5 flex items-center justify-between transition-all duration-300 group hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-pink-50/50 relative ${
                         highlightPosition === index + 1
                           ? 'bg-gradient-to-r from-purple-100 to-pink-100 ring-2 ring-inset ring-purple-400 shadow-lg'
                           : item?.isPinned
@@ -1625,7 +1625,7 @@ export default function UserRankingClient({
                           <span className="text-sm">📌</span>
                         </div>
                       )}
-                      <div className="flex items-center space-x-4 flex-1">
+                      <div className="flex items-center space-x-2 sm:space-x-4 flex-1">
                         {/* ランキング番号（クリック不可） */}
                         <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-md transform transition-all duration-300 ${
                           index === 0 
@@ -1656,7 +1656,7 @@ export default function UserRankingClient({
                               href={item.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`text-lg font-semibold truncate block hover:underline transition-all flex items-center gap-2 ${
+                              className={`text-base sm:text-lg font-semibold block hover:underline transition-all break-words ${
                                 item?.isDeleted 
                                   ? "text-gray-400 italic" 
                                   : "text-purple-700 hover:text-purple-800 group-hover:scale-[1.02]"
@@ -1665,11 +1665,10 @@ export default function UserRankingClient({
                               {item.isPinned && (
                                 <span className="text-amber-500" title="ピン留め中">📌</span>
                               )}
-                              <span>{item.title}</span>
-                              <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">🔗</span>
+                              <span className="break-words">{item.title}</span>
                             </a>
                           ) : (
-                            <h3 className={`text-lg font-semibold truncate flex items-center gap-2 ${
+                            <h3 className={`text-base sm:text-lg font-semibold break-words ${
                               item?.isDeleted 
                                 ? "text-gray-400 italic" 
                                 : item 
@@ -1681,8 +1680,7 @@ export default function UserRankingClient({
                                   {item.isPinned && (
                                     <span className="text-amber-500" title="ピン留め中">📌</span>
                                   )}
-                                  <span>{item.title}</span>
-                                  {index < 3 && <span className="text-xs opacity-60">✨</span>}
+                                  <span className="break-words">{item.title}</span>
                                 </>
                               ) : (
                                 <span className="italic">空きスロット</span>
@@ -1690,7 +1688,7 @@ export default function UserRankingClient({
                             </h3>
                           )}
                           {item?.description && !item?.isDeleted && (
-                            <p className="text-sm text-gray-600 truncate mt-1 group-hover:text-gray-700 transition-colors">
+                            <p className="text-sm text-gray-600 truncate mt-1 group-hover:text-gray-700 transition-colors overflow-hidden">
                               {item.description}
                             </p>
                           )}

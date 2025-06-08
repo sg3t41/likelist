@@ -41,7 +41,9 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
   const fetchSummaryData = async (type: "recent" | "pinned") => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/summary?userId=${pageUser.id}&type=${type}&limit=10`);
+      const limit = type === "recent" ? 10 : undefined;
+      const url = `/api/summary?userId=${pageUser.id}&type=${type}${limit ? `&limit=${limit}` : ''}`;
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         setItems(data.items);
@@ -183,7 +185,7 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
                     {item.isPinned && (
                       <span className="text-amber-500" title="ピン留め中">📌</span>
                     )}
-                    <h3 className="text-lg font-bold text-gray-900 truncate group-hover:text-purple-700 transition-colors">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 break-words group-hover:text-purple-700 transition-colors">
                       {item.title}
                     </h3>
                     {item.url && (
@@ -209,7 +211,7 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
                   </div>
                   
                   {item.description && (
-                    <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                    <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed break-words">
                       {item.description}
                     </p>
                   )}
