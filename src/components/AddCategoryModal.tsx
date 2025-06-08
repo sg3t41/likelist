@@ -59,7 +59,7 @@ export default function AddCategoryModal({ isOpen, onClose, onAdd }: AddCategory
             <span className="text-white text-xl">📁</span>
           </div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-            新しいフォルダを作成
+            新しいカテゴリを作成
           </h2>
         </div>
         <form onSubmit={handleSubmit}>

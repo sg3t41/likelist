@@ -161,8 +161,15 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
             <div
               key={item.id}
               onClick={() => handleItemClick(item)}
-              className="mx-4 mb-3 p-4 bg-white rounded-xl border border-gray-100 hover:border-purple-200 hover:shadow-lg cursor-pointer transition-all duration-200 group transform hover:scale-[1.02]"
+              className="mx-4 mb-3 p-4 bg-white rounded-xl border border-gray-100 hover:border-purple-200 hover:shadow-lg cursor-pointer transition-all duration-200 group transform hover:scale-[1.02] relative"
             >
+              {/* ピン留めマーク - 右上に配置 */}
+              {item.isPinned && (
+                <div className="absolute top-2 right-2 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center">
+                  <span className="text-sm">📌</span>
+                </div>
+              )}
+              
               <div className="flex items-center gap-4">
 
                 {/* 画像 - より大きく */}
@@ -180,11 +187,8 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
                 )}
 
                 {/* アイテム情報 - 整理された表示 */}
-                <div className="flex-1 min-w-0">
+                <div className={`flex-1 min-w-0 ${item.isPinned ? 'pr-10' : ''}`}>
                   <div className="flex items-center gap-2 mb-2">
-                    {item.isPinned && (
-                      <span className="text-amber-500" title="ピン留め中">📌</span>
-                    )}
                     <h3 className="text-base sm:text-lg font-bold text-gray-900 break-words group-hover:text-purple-700 transition-colors">
                       {item.title}
                     </h3>
@@ -197,11 +201,27 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
                   
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-sm">
-                      <span className="text-purple-600 font-medium">{item.category.main}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/u/${pageUser.id}?mainCategoryId=${item.category.mainId}&mainCategory=${encodeURIComponent(item.category.main)}&view=main`);
+                        }}
+                        className="text-purple-600 font-medium hover:text-purple-800 hover:underline transition-colors"
+                      >
+                        {item.category.main}
+                      </button>
                       {item.category.sub !== "全般" && (
                         <>
                           <span className="text-gray-400 mx-1">＞</span>
-                          <span className="text-pink-600 font-medium">{item.category.sub}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/u/${pageUser.id}?mainCategory=${encodeURIComponent(item.category.main)}&subCategory=${encodeURIComponent(item.category.sub)}&subCategoryId=${item.category.subId}`);
+                            }}
+                            className="text-pink-600 font-medium hover:text-pink-800 hover:underline transition-colors"
+                          >
+                            {item.category.sub}
+                          </button>
                         </>
                       )}
                     </span>

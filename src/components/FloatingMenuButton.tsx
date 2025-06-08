@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
+import CategoryList from "@/components/CategoryList";
 
 interface FloatingMenuButtonProps {
   allCategories?: any[];
@@ -19,6 +20,8 @@ interface FloatingMenuButtonProps {
   setExpandedCategories?: (categories: Set<string>) => void;
   selectedCategory?: string;
   isMainCategoryView?: boolean;
+  selectedMainCategoryId?: string;
+  selectedSubCategoryId?: string;
 }
 
 export default function FloatingMenuButton({ 
@@ -33,7 +36,9 @@ export default function FloatingMenuButton({
   expandedCategories = new Set(),
   setExpandedCategories,
   selectedCategory,
-  isMainCategoryView = false
+  isMainCategoryView = false,
+  selectedMainCategoryId,
+  selectedSubCategoryId
 }: FloatingMenuButtonProps) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -76,7 +81,7 @@ export default function FloatingMenuButton({
                   <span className="text-white text-sm">📁</span>
                 </div>
                 <h2 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  フォルダ
+                  カテゴリ
                 </h2>
               </div>
               {isOwner && (
@@ -86,7 +91,7 @@ export default function FloatingMenuButton({
                     setIsMenuOpen(false);
                   }}
                   className="px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-1.5 text-sm font-medium"
-                  title="新しいフォルダを作成"
+                  title="新しいカテゴリを作成"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -98,134 +103,80 @@ export default function FloatingMenuButton({
 
             {/* カテゴリリスト */}
             <div className="flex-1 overflow-y-auto pb-20">
-              {/* Show All / Clear Selection button */}
-              <div className="border-b border-purple-100/50">
-                <button
-                  onClick={() => {
-                    onClearSelection?.();
-                    setIsMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center space-x-3 p-4 transition-all group text-left ${
-                    !selectedCategory && !isMainCategoryView
-                      ? "bg-green-50/80 border-l-4 border-green-500"
-                      : "hover:bg-green-50/50"
-                  }`}
-                  title="すべてのカテゴリを表示"
-                >
-                  <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-                    <span className="text-white text-sm">🏠</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className={`font-medium truncate transition-colors block ${
-                      !selectedCategory && !isMainCategoryView
-                        ? "text-green-800"
-                        : "text-gray-900 group-hover:text-green-700"
-                    }`}>
-                      すべて表示
-                    </span>
-                  </div>
-                </button>
-              </div>
-              
-              {allCategories.map((category) => (
-                <div key={category.id} className="border-b border-purple-100/50">
-                  <div className="flex items-center">
-                    {/* メインカテゴリクリック領域 - カテゴリページに飛ぶ */}
-                    <button
-                      onClick={() => {
-                        onMainCategorySelect?.(category);
-                        setIsMenuOpen(false);
-                      }}
-                      className="flex items-center space-x-3 flex-1 min-w-0 p-4 hover:bg-purple-50/50 transition-all group text-left rounded-l-lg border-r border-gray-200"
-                      title={`${category.name}のページを表示`}
-                    >
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-                        <span className="text-white text-sm">⭐</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-medium text-gray-900 truncate group-hover:text-purple-700 transition-colors block">
-                          {category.name}
-                        </span>
-                      </div>
-                    </button>
-                    
-                    {/* 右側のボタンエリア */}
-                    <div className="flex items-center px-2">
-                      {/* 展開/折りたたみボタン - オーナーの場合は常に表示 */}
-                      {(category.subCategories?.length > 0 || isOwner) && (
-                        <button
-                          onClick={() => {
-                            const newExpanded = new Set(expandedCategories);
-                            if (newExpanded.has(category.id)) {
-                              newExpanded.delete(category.id);
-                            } else {
-                              newExpanded.add(category.id);
-                            }
-                            setExpandedCategories?.(newExpanded);
-                          }}
-                          className="p-2 hover:bg-blue-50 rounded-md transition-all"
-                          title={expandedCategories.has(category.id) ? "サブフォルダを隠す" : "サブフォルダを表示"}
-                        >
-                          <svg
-                            className={`w-4 h-4 text-blue-500 transition-transform duration-200 ${
-                              expandedCategories.has(category.id) ? "rotate-90" : ""
-                            }`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {expandedCategories.has(category.id) && (
-                    <div className="bg-gray-50/30">
-                      {category.subCategories?.map((subCat: any) => (
-                        <div key={subCat.id} className="ml-4">
-                          <button
-                            onClick={() => {
-                              onCategorySelect?.(category.name, subCat.name, subCat.id);
-                              setIsMenuOpen(false);
+              {/* ユーザー情報ヘッダー */}
+              {pageUser && (
+                <div className="border-b border-purple-100/50 bg-gradient-to-r from-purple-50 to-pink-50">
+                  <button
+                    onClick={() => {
+                      onClearSelection?.();
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full p-4 text-left hover:bg-purple-50/50 transition-colors group"
+                    title={`${pageUser.name || pageUser.username}さんのトップページ`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {/* ユーザーアイコン */}
+                      <div className="relative">
+                        {pageUser.image ? (
+                          <img
+                            src={pageUser.image}
+                            alt={pageUser.name || pageUser.username || 'ユーザー'}
+                            className="w-10 h-10 rounded-full object-cover shadow-sm"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
                             }}
-                            className="w-full flex items-center space-x-3 p-3 text-left hover:bg-purple-50/50 transition-all group/sub"
-                          >
-                            <span className="text-sm">🏷️</span>
-                            <span className="text-sm font-medium truncate group-hover/sub:text-purple-700 transition-colors">
-                              {subCat.name}
-                            </span>
-                          </button>
+                          />
+                        ) : null}
+                        <div className={`w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm ${pageUser.image ? 'hidden' : ''}`}>
+                          {(pageUser.name || pageUser.username || 'U').charAt(0).toUpperCase()}
                         </div>
-                      ))}
+                        {/* オンラインインジケーター風の装飾 */}
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                          <span className="text-white text-xs">📋</span>
+                        </div>
+                      </div>
                       
-                      {/* サブカテゴリ追加ボタン - オーナーの場合は常に表示 */}
-                      {isOwner && (
-                        <div className="ml-4 p-2">
-                          <button
-                            onClick={() => {
-                              onAddSubCategory?.(category);
-                              setIsMenuOpen(false);
-                            }}
-                            className="w-full flex items-center space-x-3 p-3 text-left hover:bg-blue-50/50 transition-all group/add border-2 border-dashed border-blue-200 rounded-lg"
-                            title={`${category.name}にサブカテゴリを追加`}
-                          >
-                            <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center">
-                              <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                            </div>
-                            <span className="text-sm font-medium text-blue-600 group-hover/add:text-blue-700 transition-colors">
-                              {category.name}にサブカテゴリを追加
-                            </span>
-                          </button>
-                        </div>
-                      )}
+                      {/* ユーザー情報テキスト */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 truncate">
+                          {pageUser.name || pageUser.username || 'ユーザー'}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          @{pageUser.username || pageUser.name || 'user'}
+                        </p>
+                        <p className="text-sm text-purple-600 font-medium">
+                          {isOwner ? 'あなたのリスト' : 'さんのリスト'}
+                        </p>
+                      </div>
+                      
+                      {/* リンクアイコン */}
+                      <div className="w-6 h-6 text-purple-400">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </div>
                     </div>
-                  )}
+                  </button>
                 </div>
-              ))}
+              )}
+              
+              <CategoryList
+                allCategories={allCategories}
+                expandedCategories={expandedCategories}
+                setExpandedCategories={setExpandedCategories}
+                onCategorySelect={onCategorySelect}
+                onMainCategorySelect={onMainCategorySelect}
+                onAddCategory={onAddCategory}
+                onAddSubCategory={onAddSubCategory}
+                isOwner={isOwner}
+                onMenuClose={() => setIsMenuOpen(false)}
+                selectedMainCategoryId={selectedMainCategoryId}
+                selectedSubCategoryId={selectedSubCategoryId}
+                isMainCategoryView={isMainCategoryView}
+              />
             </div>
 
             {/* 下部のユーザーメニュー */}

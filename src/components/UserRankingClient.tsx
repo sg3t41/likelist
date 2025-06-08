@@ -14,6 +14,7 @@ import RankingSkeleton from "@/components/RankingSkeleton";
 import BreadcrumbWrapper from "@/components/BreadcrumbWrapper";
 import FloatingMenuButton from "@/components/FloatingMenuButton";
 import MainTitle from "@/components/MainTitle";
+import CategoryList from "@/components/CategoryList";
 
 type PageUser = {
   id: string;
@@ -1206,6 +1207,8 @@ export default function UserRankingClient({
         setExpandedCategories={setExpandedCategories}
         selectedCategory={selectedCategory}
         isMainCategoryView={isMainCategoryView}
+        selectedMainCategoryId={selectedMainCategoryId}
+        selectedSubCategoryId={selectedSubCategoryId}
       />
       
       <MainTitle />
@@ -1250,7 +1253,7 @@ export default function UserRankingClient({
                   <span className="text-white text-sm">📁</span>
                 </div>
                 <h2 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  フォルダ
+                  カテゴリ
                 </h2>
               </div>
               {isOwner && (
@@ -1260,7 +1263,7 @@ export default function UserRankingClient({
                     setIsMenuOpen(false);
                   }}
                   className="px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-1.5 text-sm font-medium"
-                  title="新しいフォルダを作成"
+                  title="新しいカテゴリを作成"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1323,7 +1326,7 @@ export default function UserRankingClient({
                         setIsMenuOpen(false);
                       }}
                       className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-all transform hover:scale-110 opacity-60 hover:opacity-100"
-                      title="サブフォルダを作成"
+                      title="サブカテゴリを作成"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1373,108 +1376,49 @@ export default function UserRankingClient({
 
         <div className="flex gap-8">
           {/* サイドバー（デスクトップ）- ファイラ風デザイン */}
-          <div className="hidden lg:block w-80 bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6 h-fit">
-            <div className="flex justify-between items-center mb-6">
+          <div className="hidden lg:block w-80 bg-white rounded-lg shadow h-fit">
+            {/* ヘッダー部分 */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center shadow-md">
-                  <span className="text-white text-lg">📁</span>
+                <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-500 rounded-md flex items-center justify-center">
+                  <span className="text-white text-sm">📁</span>
                 </div>
-                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  フォルダ
+                <h2 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  カテゴリ
                 </h2>
               </div>
               {isOwner && (
                 <button
                   onClick={() => setIsAddCategoryModalOpen(true)}
                   className="px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-1.5 text-sm font-medium"
-                  title="新しいフォルダを作成"
+                  title="新しいカテゴリを作成"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  <span>新規</span>
+                  追加
                 </button>
               )}
             </div>
-            
-            
-            {allCategories.map((mainCat) => (
-              <div key={mainCat.id} className="mb-3">
-                <div className="flex items-center justify-between group">
-                  <div className="flex items-center flex-1">
-                    <button
-                      onClick={() => {
-                        setExpandedCategories(prev => {
-                          const newSet = new Set(prev);
-                          if (newSet.has(mainCat.id)) {
-                            newSet.delete(mainCat.id);
-                          } else {
-                            newSet.add(mainCat.id);
-                          }
-                          return newSet;
-                        });
-                      }}
-                      className="p-1.5 hover:bg-purple-100 rounded-lg transition-all"
-                    >
-                      <svg 
-                        className={`w-4 h-4 text-purple-500 transform transition-transform ${expandedCategories.has(mainCat.id) ? 'rotate-90' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleMainCategorySelect(mainCat)}
-                      className={`flex-1 text-left transition-all px-4 py-3 rounded-xl flex items-center gap-3 group-hover:shadow-md transform hover:scale-[1.02] ${
-                        isMainCategoryView && selectedMainCategoryId === mainCat.id
-                          ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
-                          : "bg-gradient-to-r from-purple-50 to-pink-50 text-gray-700 hover:from-purple-100 hover:to-pink-100"
-                      }`}
-                    >
-                      <span className="text-lg">
-                        ⭐
-                      </span>
-                      <span className="font-semibold text-sm truncate">{mainCat.name}</span>
-                    </button>
-                  </div>
-                  {isOwner && (
-                    <button
-                      onClick={() => {
-                        setSelectedMainCategoryForAdd(mainCat);
-                        setIsAddSubCategoryModalOpen(true);
-                      }}
-                      className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-all transform hover:scale-110 opacity-60 hover:opacity-100"
-                      title="サブフォルダを作成"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-                {expandedCategories.has(mainCat.id) && (
-                  <div className="ml-8 mt-2 space-y-1 border-l-2 border-gradient-to-b from-purple-200 to-pink-200 pl-4">
-                    {mainCat.subCategories.map((subCat: any) => (
-                      <div key={subCat.id} className="flex items-center group">
-                        <button
-                          onClick={() => handleCategorySelect(mainCat.name, subCat.name, subCat.id)}
-                          className={`flex-1 text-left px-4 py-2.5 rounded-lg transition-all flex items-center gap-3 transform hover:scale-[1.02] ${
-                            selectedCategory === subCat.name
-                              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-                              : "bg-gradient-to-r from-blue-50 to-purple-50 text-gray-700 hover:from-blue-100 hover:to-purple-100"
-                          }`}
-                        >
-                          <span className="text-sm">🏷️</span>
-                          <span className="text-sm font-medium truncate">{subCat.name}</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+
+            {/* カテゴリリスト */}
+            <CategoryList
+              allCategories={allCategories}
+              expandedCategories={expandedCategories}
+              setExpandedCategories={setExpandedCategories}
+              onCategorySelect={handleCategorySelect}
+              onMainCategorySelect={handleMainCategorySelect}
+              onAddCategory={() => setIsAddCategoryModalOpen(true)}
+              onAddSubCategory={(mainCat) => {
+                setSelectedMainCategoryForAdd(mainCat);
+                setIsAddSubCategoryModalOpen(true);
+              }}
+              isOwner={isOwner}
+              wrapperClass="pb-0"
+              selectedMainCategoryId={selectedMainCategoryId}
+              selectedSubCategoryId={selectedSubCategoryId}
+              isMainCategoryView={isMainCategoryView}
+            />
           </div>
 
           <div className="flex-1">

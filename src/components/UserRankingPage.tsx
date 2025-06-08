@@ -7,6 +7,7 @@ import AddCategoryModal from "@/components/AddCategoryModal";
 import AddSubCategoryModal from "@/components/AddSubCategoryModal";
 import AddRankingItemModal from "@/components/AddRankingItemModal";
 import EditRankingItemModal from "@/components/EditRankingItemModal";
+import CategoryList from "@/components/CategoryList";
 
 type PageUser = {
   id: string;
@@ -823,99 +824,46 @@ export default function UserRankingPage({ pageUser }: { pageUser: PageUser }) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
           {/* サイドバー（デスクトップ） */}
-          <div className="hidden lg:block w-80 bg-white rounded-lg shadow p-6 h-fit">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900">
-                カテゴリー
-              </h2>
+          <div className="hidden lg:block w-80 bg-white rounded-lg shadow h-fit">
+            {/* ヘッダー部分 */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-500 rounded-md flex items-center justify-center">
+                  <span className="text-white text-sm">📁</span>
+                </div>
+                <h2 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  カテゴリ
+                </h2>
+              </div>
               {isOwner && (
                 <button
                   onClick={() => setIsAddCategoryModalOpen(true)}
-                  className="px-3 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 text-sm font-medium"
-                  title="大カテゴリを追加"
+                  className="px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-1.5 text-sm font-medium"
+                  title="新しいカテゴリを作成"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  <span>追加</span>
+                  追加
                 </button>
               )}
             </div>
-            
-            {allCategories.map((mainCat) => (
-              <div key={mainCat.id} className="mb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center flex-1">
-                    <button
-                      onClick={() => {
-                        setExpandedCategories(prev => {
-                          const newSet = new Set(prev);
-                          if (newSet.has(mainCat.id)) {
-                            newSet.delete(mainCat.id);
-                          } else {
-                            newSet.add(mainCat.id);
-                          }
-                          return newSet;
-                        });
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded"
-                    >
-                      <svg 
-                        className={`w-4 h-4 text-gray-500 transform transition-transform ${expandedCategories.has(mainCat.id) ? 'rotate-90' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleMainCategorySelect(mainCat)}
-                      className={`flex-1 text-left text-lg font-semibold transition-colors px-4 py-2 rounded-md ${
-                        isMainCategoryView && selectedMainCategoryId === mainCat.id
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {mainCat.name}
-                    </button>
-                  </div>
-                  {isOwner && (
-                    <button
-                      onClick={() => {
-                        setSelectedMainCategoryForAdd(mainCat);
-                        setIsAddSubCategoryModalOpen(true);
-                      }}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-all"
-                      title="小カテゴリを追加"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-                {expandedCategories.has(mainCat.id) && (
-                  <div className="ml-5 mt-2 space-y-1">
-                    {mainCat.subCategories.map((subCat: any) => (
-                      <div key={subCat.id} className="flex items-center">
-                        <span className="mr-2 text-gray-400">└</span>
-                        <button
-                          onClick={() => handleCategorySelect(mainCat.name, subCat.name, subCat.id)}
-                          className={`flex-1 text-left px-4 py-2 rounded-md transition-colors ${
-                            selectedCategory === subCat.name
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          }`}
-                        >
-                          {subCat.name}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+
+            {/* カテゴリリスト */}
+            <CategoryList
+              allCategories={allCategories}
+              expandedCategories={expandedCategories}
+              setExpandedCategories={setExpandedCategories}
+              onCategorySelect={handleCategorySelect}
+              onMainCategorySelect={handleMainCategorySelect}
+              onAddCategory={() => setIsAddCategoryModalOpen(true)}
+              onAddSubCategory={(mainCat) => {
+                setSelectedMainCategoryForAdd(mainCat);
+                setIsAddSubCategoryModalOpen(true);
+              }}
+              isOwner={isOwner}
+              wrapperClass="pb-0"
+            />
           </div>
 
           <div className="flex-1">
