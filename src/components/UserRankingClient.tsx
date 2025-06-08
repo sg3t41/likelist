@@ -152,22 +152,43 @@ export default function UserRankingClient({
 
     // URLパラメータが変更された場合、対応するカテゴリを選択
     if (subCategoryIdParam && subCategoryParam && mainCategoryParam) {
-      // 小カテゴリが指定されている場合
-      const mainCat = allCategories.find(cat => cat.name === mainCategoryParam);
-      if (mainCat) {
-        const subCat = mainCat.subCategories.find((sub: any) => sub.id === subCategoryIdParam);
-        if (subCat) {
-          handleCategorySelect(mainCategoryParam, subCategoryParam, subCategoryIdParam);
+      // 小カテゴリが指定されている場合（現在の状態と異なる場合のみ実行）
+      if (selectedSubCategoryId !== subCategoryIdParam || selectedCategory !== subCategoryParam) {
+        const mainCat = allCategories.find(cat => cat.name === mainCategoryParam);
+        if (mainCat) {
+          const subCat = mainCat.subCategories.find((sub: any) => sub.id === subCategoryIdParam);
+          if (subCat) {
+            handleCategorySelect(mainCategoryParam, subCategoryParam, subCategoryIdParam);
+          }
         }
       }
-    } else if (viewParam === 'main' && mainCategoryIdParam && mainCategoryParam) {
-      // 大カテゴリが指定されている場合
-      const mainCat = allCategories.find(cat => cat.id === mainCategoryIdParam);
-      if (mainCat) {
-        handleMainCategorySelect(mainCat);
+    } else if (viewParam === 'main' && mainCategoryParam) {
+      // 大カテゴリが指定されている場合（現在の状態と異なる場合のみ実行）
+      if (selectedMainCategory !== mainCategoryParam || !isMainCategoryView) {
+        let mainCat;
+        if (mainCategoryIdParam) {
+          // IDが指定されている場合はIDで検索
+          mainCat = allCategories.find(cat => cat.id === mainCategoryIdParam);
+        } else {
+          // IDがない場合は名前で検索
+          mainCat = allCategories.find(cat => cat.name === mainCategoryParam);
+        }
+        
+        if (mainCat) {
+          handleMainCategorySelect(mainCat);
+        }
+      }
+    } else if (!mainCategoryParam && !subCategoryParam && !viewParam) {
+      // パラメータが全て空の場合はホーム状態に戻す（現在の状態と異なる場合のみ実行）
+      if (selectedCategory || selectedMainCategory || isMainCategoryView) {
+        setSelectedCategory("");
+        setSelectedMainCategory("");
+        setSelectedMainCategoryId("");
+        setSelectedSubCategoryId("");
+        setIsMainCategoryView(false);
       }
     }
-  }, [searchParams, allCategories]);
+  }, [searchParams, allCategories, selectedSubCategoryId, selectedCategory, selectedMainCategory, isMainCategoryView]);
 
 
   // タイトル編集関数
@@ -1102,6 +1123,8 @@ export default function UserRankingClient({
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
       />
+      
+      <Breadcrumb pageUser={pageUser} allCategories={allCategories} />
 
 
       {/* ハンバーガーメニュー */}

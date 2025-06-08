@@ -1,9 +1,11 @@
 import Header from "@/components/Header";
+import Breadcrumb from "@/components/Breadcrumb";
 
 export default function PrivacyPolicyPage() {
   return (
     <>
       <Header />
+      <Breadcrumb />
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
