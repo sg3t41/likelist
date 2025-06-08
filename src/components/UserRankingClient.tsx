@@ -12,7 +12,7 @@ import UserProfileSection from "@/components/UserProfileSection";
 import SummaryView from "@/components/SummaryView";
 import ImageModal from "@/components/ImageModal";
 import RankingSkeleton from "@/components/RankingSkeleton";
-import Breadcrumb from "@/components/Breadcrumb";
+import BreadcrumbWrapper from "@/components/BreadcrumbWrapper";
 
 type PageUser = {
   id: string;
@@ -1124,7 +1124,7 @@ export default function UserRankingClient({
         setIsMenuOpen={setIsMenuOpen}
       />
       
-      <Breadcrumb pageUser={pageUser} allCategories={allCategories} />
+      <BreadcrumbWrapper pageUser={pageUser} allCategories={allCategories} />
 
 
       {/* ハンバーガーメニュー */}
