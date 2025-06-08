@@ -143,22 +143,87 @@ export default function UserRankingClient({
   const [isLoading, setIsLoading] = useState(false);
   const [pinnedItems, setPinnedItems] = useState<Set<string>>(new Set());
 
-  // URLパラメータの変更を監視して状態を更新（初回ロード時のみ）
+  // 初期化済みフラグ
   const [isInitialized, setIsInitialized] = useState(false);
   
+  // initialSelectionからの状態設定（初回のみ）
   useEffect(() => {
-    // 初回ロード時のみURL復元を実行
-    if (isInitialized) return;
-
+    if (!isInitialized && allCategories.length > 0) {
+      if (initialSelection.subCategoryId) {
+        // 小カテゴリが指定されている場合
+        const mainCat = allCategories.find(cat => cat.name === initialSelection.mainCategory);
+        if (mainCat) {
+          const subCat = mainCat.subCategories.find((sub: any) => sub.id === initialSelection.subCategoryId);
+          if (subCat) {
+            setSelectedMainCategory(mainCat.name);
+            setSelectedCategory(subCat.name);
+            setSelectedSubCategoryId(initialSelection.subCategoryId);
+            setIsMainCategoryView(false);
+            
+            // initialRankingsがある場合はそれを使用
+            if (initialRankings && initialRankings.type === "sub") {
+              const rankingMap: RankingMap = {};
+              initialRankings.items.forEach((item: any) => {
+                const position = item.position || Object.keys(rankingMap).length + 1;
+                rankingMap[position] = {
+                  id: item.id,
+                  title: item.title,
+                  description: item.description,
+                  url: item.url,
+                  images: item.images,
+                  isPinned: item.isPinned
+                };
+              });
+              setRankings(prev => ({
+                ...prev,
+                [subCat.name]: rankingMap
+              }));
+            }
+          }
+        }
+      } else if (initialSelection.view === 'main' && initialSelection.mainCategoryId) {
+        // 大カテゴリが指定されている場合
+        const mainCat = allCategories.find(cat => cat.id === initialSelection.mainCategoryId);
+        if (mainCat) {
+          setSelectedMainCategory(mainCat.name);
+          setSelectedMainCategoryId(mainCat.id);
+          setSelectedCategory("");
+          setIsMainCategoryView(true);
+          
+          // initialRankingsがある場合はそれを使用
+          if (initialRankings && initialRankings.type === "main") {
+            const rankingMap: RankingMap = {};
+            initialRankings.items.forEach((item: any) => {
+              const position = item.position || Object.keys(rankingMap).length + 1;
+              rankingMap[position] = {
+                id: item.id,
+                title: item.title,
+                description: item.description,
+                url: item.url,
+                images: item.images,
+                isPinned: item.isPinned
+              };
+            });
+            setMainCategoryRankings(rankingMap);
+          }
+        }
+      }
+      setIsInitialized(true);
+    }
+  }, [allCategories, initialSelection, initialRankings, isInitialized]);
+  
+  // URL変更の監視（初期化後）
+  useEffect(() => {
+    if (!isInitialized) return;
+    
     const mainCategoryParam = searchParams.get('mainCategory');
     const subCategoryParam = searchParams.get('subCategory');
     const subCategoryIdParam = searchParams.get('subCategoryId');
     const mainCategoryIdParam = searchParams.get('mainCategoryId');
     const viewParam = searchParams.get('view');
-
-    // URLパラメータが変更された場合、対応するカテゴリを選択
+    
     if (subCategoryIdParam && subCategoryParam && mainCategoryParam) {
-      // 小カテゴリが指定されている場合
+      // 小カテゴリナビゲーション
       const mainCat = allCategories.find(cat => cat.name === mainCategoryParam);
       if (mainCat) {
         const subCat = mainCat.subCategories.find((sub: any) => sub.id === subCategoryIdParam);
@@ -167,9 +232,9 @@ export default function UserRankingClient({
           setSelectedCategory(subCat.name);
           setSelectedSubCategoryId(subCategoryIdParam);
           setIsMainCategoryView(false);
-          setIsInitialized(true);
+          setSelectedMainCategoryId('');
           
-          // データ取得
+          // データを再取得
           const fetchRankings = async () => {
             setIsLoading(true);
             try {
@@ -204,7 +269,7 @@ export default function UserRankingClient({
         }
       }
     } else if (viewParam === 'main' && mainCategoryParam) {
-      // 大カテゴリが指定されている場合
+      // 大カテゴリナビゲーション
       let mainCat;
       if (mainCategoryIdParam) {
         mainCat = allCategories.find(cat => cat.id === mainCategoryIdParam);
@@ -216,43 +281,20 @@ export default function UserRankingClient({
         setSelectedMainCategory(mainCat.name);
         setSelectedMainCategoryId(mainCat.id);
         setSelectedCategory("");
+        setSelectedSubCategoryId('');
         setIsMainCategoryView(true);
-        setIsInitialized(true);
         
-        // データ取得
-        const fetchMainRankings = async () => {
-          setIsLoading(true);
-          try {
-            const response = await fetch(`/api/rankings?mainCategoryId=${mainCat.id}&userId=${pageUser.id}`);
-            if (response.ok) {
-              const items = await response.json();
-              const rankingMap: RankingMap = {};
-              items.forEach((item: any) => {
-                const position = item.position || Object.keys(rankingMap).length + 1;
-                rankingMap[position] = {
-                  id: item.id,
-                  title: item.title,
-                  description: item.description,
-                  url: item.url,
-                  images: item.images,
-                  isPinned: item.isPinned
-                };
-              });
-              setMainCategoryRankings(rankingMap);
-            }
-          } catch (error) {
-            console.error("Error fetching main category rankings:", error);
-          } finally {
-            setIsLoading(false);
-          }
-        };
-        
-        fetchMainRankings();
+        fetchMainCategoryRankings(mainCat.id);
       }
-    } else {
-      setIsInitialized(true);
+    } else if (!mainCategoryParam && !subCategoryParam && !viewParam) {
+      // トップページに戻る
+      setSelectedMainCategory("");
+      setSelectedCategory("");
+      setSelectedSubCategoryId('');
+      setSelectedMainCategoryId('');
+      setIsMainCategoryView(false);
     }
-  }, [searchParams, allCategories, isInitialized]);
+  }, [searchParams, allCategories, isInitialized, pageUser.id]);
 
 
   // タイトル編集関数
@@ -345,66 +387,31 @@ export default function UserRankingClient({
     router.push(`/u/${pageUser.id}?${newParams.toString()}`);
   };
 
-  const handleCategorySelect = async (mainCat: string, subCat: string, subCatId: string) => {
-    setIsLoading(true);
+  const clearSelectionAndNavigateToTop = () => {
+    // URLのみを更新 - 状態の更新はuseEffectに任せる
+    router.push(`/u/${pageUser.id}`);
+  };
+
+  const handleCategorySelect = (mainCat: string, subCat: string, subCatId: string) => {
     setIsMenuOpen(false);
-    setSelectedMainCategory(mainCat);
-    setSelectedCategory(subCat);
-    setSelectedSubCategoryId(subCatId);
-    setIsMainCategoryView(false);
     
-    // URLを更新
+    // URLのみを更新 - 状態の更新とデータ取得はuseEffectに任せる
     updateURL({
       mainCategory: mainCat,
       subCategory: subCat,
       subCategoryId: subCatId
     });
-    
-    // 小カテゴリのランキングを取得
-    try {
-      const response = await fetch(`/api/rankings?subCategoryId=${subCatId}&userId=${pageUser.id}`);
-      if (response.ok) {
-        const items = await response.json();
-        const rankingMap: RankingMap = {};
-        items.forEach((item: any) => {
-          const position = item.position || Object.keys(rankingMap).length + 1;
-          rankingMap[position] = {
-            id: item.id,
-            title: item.title,
-            description: item.description,
-            url: item.url,
-            images: item.images,
-            isPinned: item.isPinned
-          };
-        });
-        setRankings(prev => ({
-          ...prev,
-          [subCat]: rankingMap
-        }));
-      }
-    } catch (error) {
-      console.error("Error fetching subcategory rankings:", error);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleMainCategorySelect = (mainCat: any) => {
-    setIsLoading(true);
     setIsMenuOpen(false);
-    setSelectedMainCategory(mainCat.name);
-    setSelectedMainCategoryId(mainCat.id);
-    setSelectedCategory("");
-    setIsMainCategoryView(true);
     
-    // URLを更新
+    // URLのみを更新 - 状態の更新とデータ取得はuseEffectに任せる
     updateURL({
       mainCategoryId: mainCat.id,
       mainCategory: mainCat.name,
       view: 'main'
     });
-    
-    fetchMainCategoryRankings(mainCat.id);
   };
 
   const fetchMainCategoryRankings = async (mainCategoryId: string) => {
@@ -1190,8 +1197,11 @@ export default function UserRankingClient({
           setSelectedMainCategoryForAdd(mainCat);
           setIsAddSubCategoryModalOpen(true);
         }}
+        onClearSelection={clearSelectionAndNavigateToTop}
         expandedCategories={expandedCategories}
         setExpandedCategories={setExpandedCategories}
+        selectedCategory={selectedCategory}
+        isMainCategoryView={isMainCategoryView}
       />
       
       <MainTitle />
@@ -1255,6 +1265,25 @@ export default function UserRankingClient({
                 </button>
               )}
             </div>
+            
+            {/* Show All / Clear Selection button */}
+            <div className="mb-4">
+              <button
+                onClick={() => {
+                  clearSelectionAndNavigateToTop();
+                  setIsMenuOpen(false);
+                }}
+                className={`w-full text-left transition-all px-3 py-2.5 rounded-xl flex items-center gap-2 group-hover:shadow-md transform hover:scale-[1.02] ${
+                  !selectedCategory && !isMainCategoryView
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
+                    : "bg-gradient-to-r from-green-50 to-emerald-50 text-gray-700 hover:from-green-100 hover:to-emerald-100"
+                }`}
+              >
+                <span className="text-base">🏠</span>
+                <span className="font-semibold text-sm">すべて表示</span>
+              </button>
+            </div>
+            
             {allCategories.map((mainCat) => (
               <div key={mainCat.id} className="mb-3">
                 <div className="flex items-center justify-between group">
@@ -1379,6 +1408,21 @@ export default function UserRankingClient({
                   <span>新規</span>
                 </button>
               )}
+            </div>
+            
+            {/* Show All / Clear Selection button - Desktop */}
+            <div className="mb-4">
+              <button
+                onClick={clearSelectionAndNavigateToTop}
+                className={`w-full text-left transition-all px-3 py-2.5 rounded-xl flex items-center gap-2 group-hover:shadow-md transform hover:scale-[1.02] ${
+                  !selectedCategory && !isMainCategoryView
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
+                    : "bg-gradient-to-r from-green-50 to-emerald-50 text-gray-700 hover:from-green-100 hover:to-emerald-100"
+                }`}
+              >
+                <span className="text-base">🏠</span>
+                <span className="font-semibold text-sm">すべて表示</span>
+              </button>
             </div>
             
             {allCategories.map((mainCat) => (

@@ -14,8 +14,11 @@ interface FloatingMenuButtonProps {
   onMainCategorySelect?: (mainCat: any) => void;
   onAddCategory?: () => void;
   onAddSubCategory?: (mainCat: any) => void;
+  onClearSelection?: () => void;
   expandedCategories?: Set<string>;
   setExpandedCategories?: (categories: Set<string>) => void;
+  selectedCategory?: string;
+  isMainCategoryView?: boolean;
 }
 
 export default function FloatingMenuButton({ 
@@ -26,8 +29,11 @@ export default function FloatingMenuButton({
   onMainCategorySelect,
   onAddCategory,
   onAddSubCategory,
+  onClearSelection,
   expandedCategories = new Set(),
-  setExpandedCategories
+  setExpandedCategories,
+  selectedCategory,
+  isMainCategoryView = false
 }: FloatingMenuButtonProps) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -92,6 +98,35 @@ export default function FloatingMenuButton({
 
             {/* カテゴリリスト */}
             <div className="flex-1 overflow-y-auto pb-20">
+              {/* Show All / Clear Selection button */}
+              <div className="border-b border-purple-100/50">
+                <button
+                  onClick={() => {
+                    onClearSelection?.();
+                    setIsMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center space-x-3 p-4 transition-all group text-left ${
+                    !selectedCategory && !isMainCategoryView
+                      ? "bg-green-50/80 border-l-4 border-green-500"
+                      : "hover:bg-green-50/50"
+                  }`}
+                  title="すべてのカテゴリを表示"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                    <span className="text-white text-sm">🏠</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className={`font-medium truncate transition-colors block ${
+                      !selectedCategory && !isMainCategoryView
+                        ? "text-green-800"
+                        : "text-gray-900 group-hover:text-green-700"
+                    }`}>
+                      すべて表示
+                    </span>
+                  </div>
+                </button>
+              </div>
+              
               {allCategories.map((category) => (
                 <div key={category.id} className="border-b border-purple-100/50">
                   <div className="flex items-center">
