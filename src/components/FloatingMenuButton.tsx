@@ -97,7 +97,7 @@ export default function FloatingMenuButton({
           onClick={closeMenu}
         >
           <div 
-            className={`fixed top-0 left-0 w-80 h-full bg-white/95 backdrop-blur-lg shadow-2xl transform transition-transform duration-300 ease-out overflow-y-auto ${
+            className={`fixed top-0 left-0 w-80 h-full bg-white/95 backdrop-blur-lg shadow-2xl transform transition-transform duration-300 ease-out flex flex-col ${
               isAnimating ? 'translate-x-0' : '-translate-x-full'
             }`}
             onClick={(e) => e.stopPropagation()}
@@ -193,7 +193,7 @@ export default function FloatingMenuButton({
             </div>
 
             {/* カテゴリリスト */}
-            <div className="flex-1 overflow-y-auto pb-20">
+            <div className="flex-1 overflow-y-auto">
               <CategoryList
                 allCategories={allCategories}
                 expandedCategories={expandedCategories}
@@ -211,7 +211,7 @@ export default function FloatingMenuButton({
             </div>
 
             {/* 下部のユーザーメニュー */}
-            <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 p-4 space-y-3">
+            <div className="border-t border-gray-200 bg-white/95 backdrop-blur-sm p-4 space-y-3">
               {/* ユーザー情報とアクション */}
               {session?.user ? (
                 <>
