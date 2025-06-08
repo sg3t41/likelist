@@ -1,7 +1,8 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useScrollHeader } from "@/hooks/useScrollHeader";
+import FloatingMenuButton from "@/components/FloatingMenuButton";
+import MainTitle from "@/components/MainTitle";
 
 interface HomeClientProps {
   currentUser?: any;
@@ -9,32 +10,12 @@ interface HomeClientProps {
 
 export default function HomeClient({ currentUser }: HomeClientProps) {
   const username = currentUser ? (currentUser as any).username : null;
-  const isVisible = useScrollHeader();
   
   return (
     <>
-      {/* シンプルなヘッダー */}
-      <header className={`bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100 sticky top-0 z-40 transition-transform duration-300 ease-in-out ${
-        isVisible ? 'translate-y-0' : '-translate-y-full'
-      }`}>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-fredoka)' }}>
-              すきなものリスト
-            </h1>
-            
-            {currentUser && username && (
-              <a
-                href={`/u/${(currentUser as any).userId || username}`}
-                className="px-4 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center gap-2"
-              >
-                <span className="text-lg">🏠</span>
-                マイページ
-              </a>
-            )}
-          </div>
-        </div>
-      </header>
+      <FloatingMenuButton />
+      
+      <MainTitle />
 
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center relative overflow-hidden">
         {/* 背景装飾 */}

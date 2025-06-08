@@ -7,12 +7,13 @@ import AddCategoryModal from "@/components/AddCategoryModal";
 import AddSubCategoryModal from "@/components/AddSubCategoryModal";
 import AddRankingItemModal from "@/components/AddRankingItemModal";
 import EditRankingItemModal from "@/components/EditRankingItemModal";
-import UserRankingHeader from "@/components/UserRankingHeader";
 import UserProfileSection from "@/components/UserProfileSection";
 import SummaryView from "@/components/SummaryView";
 import ImageModal from "@/components/ImageModal";
 import RankingSkeleton from "@/components/RankingSkeleton";
 import BreadcrumbWrapper from "@/components/BreadcrumbWrapper";
+import FloatingMenuButton from "@/components/FloatingMenuButton";
+import MainTitle from "@/components/MainTitle";
 
 type PageUser = {
   id: string;
@@ -142,8 +143,13 @@ export default function UserRankingClient({
   const [isLoading, setIsLoading] = useState(false);
   const [pinnedItems, setPinnedItems] = useState<Set<string>>(new Set());
 
-  // URLパラメータの変更を監視して状態を更新
+  // URLパラメータの変更を監視して状態を更新（初回ロード時のみ）
+  const [isInitialized, setIsInitialized] = useState(false);
+  
   useEffect(() => {
+    // 初回ロード時のみURL復元を実行
+    if (isInitialized) return;
+
     const mainCategoryParam = searchParams.get('mainCategory');
     const subCategoryParam = searchParams.get('subCategory');
     const subCategoryIdParam = searchParams.get('subCategoryId');
@@ -152,43 +158,101 @@ export default function UserRankingClient({
 
     // URLパラメータが変更された場合、対応するカテゴリを選択
     if (subCategoryIdParam && subCategoryParam && mainCategoryParam) {
-      // 小カテゴリが指定されている場合（現在の状態と異なる場合のみ実行）
-      if (selectedSubCategoryId !== subCategoryIdParam || selectedCategory !== subCategoryParam) {
-        const mainCat = allCategories.find(cat => cat.name === mainCategoryParam);
-        if (mainCat) {
-          const subCat = mainCat.subCategories.find((sub: any) => sub.id === subCategoryIdParam);
-          if (subCat) {
-            handleCategorySelect(mainCategoryParam, subCategoryParam, subCategoryIdParam);
-          }
+      // 小カテゴリが指定されている場合
+      const mainCat = allCategories.find(cat => cat.name === mainCategoryParam);
+      if (mainCat) {
+        const subCat = mainCat.subCategories.find((sub: any) => sub.id === subCategoryIdParam);
+        if (subCat) {
+          setSelectedMainCategory(mainCat.name);
+          setSelectedCategory(subCat.name);
+          setSelectedSubCategoryId(subCategoryIdParam);
+          setIsMainCategoryView(false);
+          setIsInitialized(true);
+          
+          // データ取得
+          const fetchRankings = async () => {
+            setIsLoading(true);
+            try {
+              const response = await fetch(`/api/rankings?subCategoryId=${subCategoryIdParam}&userId=${pageUser.id}`);
+              if (response.ok) {
+                const items = await response.json();
+                const rankingMap: RankingMap = {};
+                items.forEach((item: any) => {
+                  const position = item.position || Object.keys(rankingMap).length + 1;
+                  rankingMap[position] = {
+                    id: item.id,
+                    title: item.title,
+                    description: item.description,
+                    url: item.url,
+                    images: item.images,
+                    isPinned: item.isPinned
+                  };
+                });
+                setRankings(prev => ({
+                  ...prev,
+                  [subCat.name]: rankingMap
+                }));
+              }
+            } catch (error) {
+              console.error("Error fetching subcategory rankings:", error);
+            } finally {
+              setIsLoading(false);
+            }
+          };
+          
+          fetchRankings();
         }
       }
     } else if (viewParam === 'main' && mainCategoryParam) {
-      // 大カテゴリが指定されている場合（現在の状態と異なる場合のみ実行）
-      if (selectedMainCategory !== mainCategoryParam || !isMainCategoryView) {
-        let mainCat;
-        if (mainCategoryIdParam) {
-          // IDが指定されている場合はIDで検索
-          mainCat = allCategories.find(cat => cat.id === mainCategoryIdParam);
-        } else {
-          // IDがない場合は名前で検索
-          mainCat = allCategories.find(cat => cat.name === mainCategoryParam);
-        }
-        
-        if (mainCat) {
-          handleMainCategorySelect(mainCat);
-        }
+      // 大カテゴリが指定されている場合
+      let mainCat;
+      if (mainCategoryIdParam) {
+        mainCat = allCategories.find(cat => cat.id === mainCategoryIdParam);
+      } else {
+        mainCat = allCategories.find(cat => cat.name === mainCategoryParam);
       }
-    } else if (!mainCategoryParam && !subCategoryParam && !viewParam) {
-      // パラメータが全て空の場合はホーム状態に戻す（現在の状態と異なる場合のみ実行）
-      if (selectedCategory || selectedMainCategory || isMainCategoryView) {
+      
+      if (mainCat) {
+        setSelectedMainCategory(mainCat.name);
+        setSelectedMainCategoryId(mainCat.id);
         setSelectedCategory("");
-        setSelectedMainCategory("");
-        setSelectedMainCategoryId("");
-        setSelectedSubCategoryId("");
-        setIsMainCategoryView(false);
+        setIsMainCategoryView(true);
+        setIsInitialized(true);
+        
+        // データ取得
+        const fetchMainRankings = async () => {
+          setIsLoading(true);
+          try {
+            const response = await fetch(`/api/rankings?mainCategoryId=${mainCat.id}&userId=${pageUser.id}`);
+            if (response.ok) {
+              const items = await response.json();
+              const rankingMap: RankingMap = {};
+              items.forEach((item: any) => {
+                const position = item.position || Object.keys(rankingMap).length + 1;
+                rankingMap[position] = {
+                  id: item.id,
+                  title: item.title,
+                  description: item.description,
+                  url: item.url,
+                  images: item.images,
+                  isPinned: item.isPinned
+                };
+              });
+              setMainCategoryRankings(rankingMap);
+            }
+          } catch (error) {
+            console.error("Error fetching main category rankings:", error);
+          } finally {
+            setIsLoading(false);
+          }
+        };
+        
+        fetchMainRankings();
       }
+    } else {
+      setIsInitialized(true);
     }
-  }, [searchParams, allCategories, selectedSubCategoryId, selectedCategory, selectedMainCategory, isMainCategoryView]);
+  }, [searchParams, allCategories, isInitialized]);
 
 
   // タイトル編集関数
@@ -281,13 +345,13 @@ export default function UserRankingClient({
     router.push(`/u/${pageUser.id}?${newParams.toString()}`);
   };
 
-  const handleCategorySelect = async (mainCat: MainCategory, subCat: Category, subCatId: string) => {
+  const handleCategorySelect = async (mainCat: string, subCat: string, subCatId: string) => {
+    setIsLoading(true);
+    setIsMenuOpen(false);
     setSelectedMainCategory(mainCat);
     setSelectedCategory(subCat);
     setSelectedSubCategoryId(subCatId);
     setIsMainCategoryView(false);
-    setIsMenuOpen(false);
-    setIsLoading(true);
     
     // URLを更新
     updateURL({
@@ -326,12 +390,12 @@ export default function UserRankingClient({
   };
 
   const handleMainCategorySelect = (mainCat: any) => {
+    setIsLoading(true);
+    setIsMenuOpen(false);
     setSelectedMainCategory(mainCat.name);
     setSelectedMainCategoryId(mainCat.id);
     setSelectedCategory("");
     setIsMainCategoryView(true);
-    setIsMenuOpen(false);
-    setIsLoading(true);
     
     // URLを更新
     updateURL({
@@ -1117,12 +1181,22 @@ export default function UserRankingClient({
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-pink-300/10 to-purple-300/10 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 -left-40 w-96 h-96 bg-gradient-to-tr from-blue-300/10 to-indigo-300/10 rounded-full blur-3xl"></div>
       </div>
-      <UserRankingHeader
+      <FloatingMenuButton 
+        allCategories={allCategories}
         pageUser={pageUser}
-        currentUser={currentUser}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
+        isOwner={isOwner}
+        onCategorySelect={handleCategorySelect}
+        onMainCategorySelect={handleMainCategorySelect}
+        onAddCategory={() => setIsAddCategoryModalOpen(true)}
+        onAddSubCategory={(mainCat) => {
+          setSelectedMainCategoryForAdd(mainCat);
+          setIsAddSubCategoryModalOpen(true);
+        }}
+        expandedCategories={expandedCategories}
+        setExpandedCategories={setExpandedCategories}
       />
+      
+      <MainTitle />
       
       <BreadcrumbWrapper pageUser={pageUser} allCategories={allCategories} />
 

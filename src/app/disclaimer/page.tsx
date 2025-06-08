@@ -1,10 +1,10 @@
-import Header from "@/components/Header";
+import FloatingMenuButton from "@/components/FloatingMenuButton";
 import BreadcrumbWrapper from "@/components/BreadcrumbWrapper";
 
 export default function DisclaimerPage() {
   return (
     <>
-      <Header />
+      <FloatingMenuButton />
       <BreadcrumbWrapper />
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
       <div className="max-w-4xl mx-auto px-4 py-12">

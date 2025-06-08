@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Header from "@/components/Header";
+import FloatingMenuButton from "@/components/FloatingMenuButton";
 import BreadcrumbWrapper from "@/components/BreadcrumbWrapper";
+import MainTitle from "@/components/MainTitle";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -30,7 +31,8 @@ export default function ContactPage() {
   if (isSubmitted) {
     return (
       <>
-        <Header />
+        <FloatingMenuButton />
+        <MainTitle />
         <BreadcrumbWrapper />
         <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
         <div className="max-w-2xl mx-auto px-4 py-12">
@@ -68,7 +70,8 @@ export default function ContactPage() {
 
   return (
     <>
-      <Header />
+      <FloatingMenuButton />
+      <MainTitle />
       <BreadcrumbWrapper />
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
       <div className="max-w-2xl mx-auto px-4 py-12">
