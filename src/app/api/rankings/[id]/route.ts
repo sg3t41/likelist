@@ -122,11 +122,20 @@ export async function DELETE(
     const { id } = await params;
     const session = await getServerSession(authOptions);
     
+    console.log('[DELETE API] Session:', { 
+      hasSession: !!session, 
+      userId: session?.user ? (session.user as any).userId : null 
+    });
+    
     if (!session?.user || !(session.user as any).userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      console.log('[DELETE API] Unauthorized access attempt');
+      return NextResponse.json({ 
+        error: "認証が必要です。ログインしてください。" 
+      }, { status: 401 });
     }
 
     const userId = (session.user as any).userId;
+    console.log('[DELETE API] Attempting to delete item:', { id, userId });
 
     // アイテムの存在確認と権限チェック
     const existingItem = await prisma.rankingItem.findUnique({
@@ -136,39 +145,78 @@ export async function DELETE(
       },
     });
 
+    console.log('[DELETE API] Found item:', { 
+      exists: !!existingItem, 
+      itemUserId: existingItem?.userId, 
+      requestUserId: userId,
+      hasReferences: existingItem?.mainCategoryReferences?.length || 0
+    });
+
     if (!existingItem) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+      console.log('[DELETE API] Item not found:', id);
+      return NextResponse.json({ 
+        error: "削除対象のアイテムが見つかりません。" 
+      }, { status: 404 });
     }
 
     if (existingItem.userId !== userId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      console.log('[DELETE API] Permission denied:', { itemUserId: existingItem.userId, requestUserId: userId });
+      return NextResponse.json({ 
+        error: "このアイテムを削除する権限がありません。" 
+      }, { status: 403 });
     }
 
-    // 削除前に、この項目を参照している大カテゴリがあるかチェック
+    // 削除処理をトランザクションで実行
     const hasReferences = existingItem.mainCategoryReferences.length > 0;
 
-    if (hasReferences) {
-      // 参照がある場合は、項目を「削除済み」としてマークする
-      // タイトルを「[削除されたアイテム]」に変更し、説明をクリア
-      await prisma.rankingItem.update({
-        where: { id },
-        data: {
-          title: "[削除されたアイテム]",
-          description: null,
-          // 小カテゴリから切り離す（大カテゴリの参照は残す）
-          subCategoryId: null,
-        },
-      });
-    } else {
-      // 参照がない場合は通常通り削除
-      await prisma.rankingItem.delete({
-        where: { id },
-      });
-    }
+    await prisma.$transaction(async (tx) => {
+      if (hasReferences) {
+        // 参照がある場合は、項目を「削除済み」としてマークする
+        console.log('[DELETE API] Marking item as deleted (has references)');
+        await tx.rankingItem.update({
+          where: { id },
+          data: {
+            title: "[削除されたアイテム]",
+            description: null,
+            // 小カテゴリから切り離す（大カテゴリの参照は残す）
+            subCategoryId: null,
+          },
+        });
+      } else {
+        // 参照がない場合は関連データを明示的に削除してから本体を削除
+        console.log('[DELETE API] Permanently deleting item (no references)');
+        
+        // 1. 画像を先に削除
+        await tx.rankingItemImage.deleteMany({
+          where: { rankingItemId: id },
+        });
+        
+        // 2. メインカテゴリ参照を削除（念のため）
+        await tx.mainCategoryItemReference.deleteMany({
+          where: { rankingItemId: id },
+        });
+        
+        // 3. 本体を削除
+        await tx.rankingItem.delete({
+          where: { id },
+        });
+      }
+    });
 
+    console.log('[DELETE API] Item deletion completed successfully');
     return NextResponse.json({ message: "Item deleted successfully" });
   } catch (error) {
-    console.error("Error deleting ranking item:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("[DELETE API] Error deleting ranking item:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      itemId: await params.then(p => p.id).catch(() => 'unknown')
+    });
+    
+    // より詳細なエラー情報をレスポンスに含める
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    return NextResponse.json({ 
+      error: "サーバーエラーが発生しました。",
+      details: errorMessage
+    }, { status: 500 });
   }
 }

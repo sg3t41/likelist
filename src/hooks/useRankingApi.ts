@@ -135,7 +135,38 @@ export function useRankingApi({
         console.log('Reference deleted successfully');
       } else {
         // 通常のアイテムの場合
-        await RankingService.deleteRanking(itemId);
+        const response = await fetch(`/api/rankings/${itemId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Delete failed:', { 
+            status: response.status, 
+            statusText: response.statusText,
+            error: errorText,
+            url: response.url
+          });
+          
+          // より具体的なエラーメッセージを生成
+          let errorMessage = `削除に失敗しました (${response.status})`;
+          try {
+            const errorJson = JSON.parse(errorText);
+            if (errorJson.error) {
+              errorMessage += `: ${errorJson.error}`;
+            }
+          } catch {
+            if (errorText) {
+              errorMessage += `: ${errorText}`;
+            }
+          }
+          
+          throw new Error(errorMessage);
+        }
+        
         console.log('Item deleted successfully');
       }
       
@@ -154,7 +185,10 @@ export function useRankingApi({
       return true;
     } catch (error) {
       console.error("Error deleting ranking item:", error);
-      alert("削除に失敗しました");
+      
+      // エラーメッセージをより詳細に表示
+      const message = error instanceof Error ? error.message : "削除に失敗しました";
+      alert(message);
       return false;
     }
   }, [fetchMainCategoryRankings, fetchSubCategoryRankings]);
