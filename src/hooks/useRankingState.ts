@@ -45,6 +45,26 @@ export function useRankingState({
 
   const [rankings, setRankings] = useState<Rankings>(getInitialRankings());
   const [allCategories, setAllCategories] = useState<any[]>(initialCategories);
+  const [lastUpdateTimestamps, setLastUpdateTimestamps] = useState<Record<string, number>>({});
+
+  // 楽観的更新でsetRankingsを呼ぶ場合のラッパー関数
+  const setRankingsWithTimestamp = useCallback((updater: React.SetStateAction<Rankings>, dataKey?: string) => {
+    if (dataKey) {
+      console.log('[useRankingState] Optimistic update for key:', dataKey);
+      setLastUpdateTimestamps(prev => ({
+        ...prev,
+        [dataKey]: Date.now()
+      }));
+    }
+    setRankings(updater);
+  }, []);
+
+  // 最近更新されたかどうかをチェックする関数（5秒以内の更新はスキップ）
+  const isRecentlyUpdated = useCallback((dataKey: string): boolean => {
+    const lastUpdate = lastUpdateTimestamps[dataKey];
+    if (!lastUpdate) return false;
+    return Date.now() - lastUpdate < 5000; // 5秒以内
+  }, [lastUpdateTimestamps]);
 
   // UI状態
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -84,28 +104,40 @@ export function useRankingState({
     position: number;
   } | null>(null);
 
-  // URLパラメータ変更時の状態同期
+  // URLパラメータ変更時の状態同期（競合を防ぐため、まとめて更新）
   useEffect(() => {
     if (initialSelection) {
+      const updates: Record<string, any> = {};
+      
       if (initialSelection.mainCategory && selectedMainCategory !== initialSelection.mainCategory) {
-        setSelectedMainCategory(initialSelection.mainCategory);
+        updates.mainCategory = initialSelection.mainCategory;
       }
       if (initialSelection.subCategory && selectedCategory !== initialSelection.subCategory) {
-        setSelectedCategory(initialSelection.subCategory);
+        updates.subCategory = initialSelection.subCategory;
       }
       if (initialSelection.mainCategoryId && selectedMainCategoryId !== initialSelection.mainCategoryId) {
-        setSelectedMainCategoryId(initialSelection.mainCategoryId);
+        updates.mainCategoryId = initialSelection.mainCategoryId;
       }
       if (initialSelection.subCategoryId && selectedSubCategoryId !== initialSelection.subCategoryId) {
-        setSelectedSubCategoryId(initialSelection.subCategoryId);
+        updates.subCategoryId = initialSelection.subCategoryId;
       }
       if (initialSelection.view === 'main' && !isMainCategoryView) {
-        setIsMainCategoryView(true);
+        updates.isMainCategoryView = true;
       } else if (initialSelection.view !== 'main' && isMainCategoryView) {
-        setIsMainCategoryView(false);
+        updates.isMainCategoryView = false;
+      }
+      
+      // 一度に全ての更新を実行（競合を防ぐ）
+      if (Object.keys(updates).length > 0) {
+        console.log('[useRankingState] Batch updating states:', updates);
+        if (updates.mainCategory) setSelectedMainCategory(updates.mainCategory);
+        if (updates.subCategory) setSelectedCategory(updates.subCategory);
+        if (updates.mainCategoryId) setSelectedMainCategoryId(updates.mainCategoryId);
+        if (updates.subCategoryId) setSelectedSubCategoryId(updates.subCategoryId);
+        if (updates.isMainCategoryView !== undefined) setIsMainCategoryView(updates.isMainCategoryView);
       }
     }
-  }, [initialSelection, selectedMainCategory, selectedCategory, selectedMainCategoryId, selectedSubCategoryId, isMainCategoryView]);
+  }, [initialSelection?.mainCategory, initialSelection?.subCategory, initialSelection?.mainCategoryId, initialSelection?.subCategoryId, initialSelection?.view]);
 
   return {
     // カテゴリ選択
@@ -123,6 +155,8 @@ export function useRankingState({
     // データ
     rankings,
     setRankings,
+    setRankingsWithTimestamp,
+    isRecentlyUpdated,
     allCategories,
     setAllCategories,
 

@@ -1,5 +1,5 @@
 // Service Worker for すきなものリスト
-const CACHE_NAME = 'sukilist-v1';
+const CACHE_NAME = 'sukilist-v3'; // バージョンアップして既存キャッシュを無効化
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -9,8 +9,10 @@ const STATIC_ASSETS = [
 
 // キャッシュ戦略の定義
 const CACHE_STRATEGIES = {
-  // 静的アセット: Cache First
-  STATIC: /\.(js|css|woff2|png|jpg|jpeg|gif|ico|svg)$/,
+  // 静的アセット: Cache First（ただし動的画像は除外）
+  STATIC: /\.(js|css|woff2)$|\/icons\/.*\.(png|jpg|jpeg|gif|ico|svg)$/,
+  // 動的画像: Network First（ユーザーアップロード画像やクエリ付きURL）
+  DYNAMIC_IMAGES: /\.(png|jpg|jpeg|gif|svg)(\?|$)/,
   // API: Network First with fallback
   API: /^\/api\//,
   // ページ: Stale While Revalidate
@@ -65,6 +67,12 @@ self.addEventListener('fetch', (event) => {
   // GET リクエストのみ処理
   if (method !== 'GET') return;
 
+  // 動的画像: Network First（ユーザーアップロード画像など）
+  if (CACHE_STRATEGIES.DYNAMIC_IMAGES.test(url)) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
   // 静的アセット: Cache First
   if (CACHE_STRATEGIES.STATIC.test(url)) {
     event.respondWith(cacheFirst(request));
@@ -106,14 +114,24 @@ async function cacheFirst(request) {
   }
 }
 
-// Network First 戦略
+// Network First 戦略（画像は短時間キャッシュ）
 async function networkFirst(request) {
   try {
     const networkResponse = await fetch(request);
     
     if (networkResponse.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, networkResponse.clone());
+      // 画像の場合は常に最新を表示するため、キャッシュは短期間のみ
+      if (CACHE_STRATEGIES.DYNAMIC_IMAGES.test(request.url)) {
+        console.log('[SW] Caching image with short TTL:', request.url);
+        const cache = await caches.open(CACHE_NAME);
+        // 画像は1分間のみキャッシュして、新しい画像がすぐに表示されるように
+        cache.put(request, networkResponse.clone());
+        return networkResponse;
+      } else {
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(request, networkResponse.clone());
+        return networkResponse;
+      }
     }
     
     return networkResponse;

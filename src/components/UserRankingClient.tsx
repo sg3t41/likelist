@@ -108,6 +108,7 @@ export default function UserRankingClient({
   const pinFeature = useRankingPin({
     rankings: state.rankings,
     setRankings: state.setRankings,
+    setRankingsWithTimestamp: state.setRankingsWithTimestamp,
     isMainCategoryView: currentViewState.isMainCategoryView,
     selectedMainCategoryId: currentViewState.selectedMainCategoryId,
     selectedCategory: currentViewState.selectedCategory,
@@ -222,8 +223,60 @@ export default function UserRankingClient({
   };
 
   const handlePositionChange = async (newPosition: number) => {
-    if (state.selectedItemForMove) {
-      // TODO: API呼び出し
+    if (!state.selectedItemForMove) return;
+    
+    const { item, position: oldPosition } = state.selectedItemForMove;
+    
+    try {
+      // API呼び出し
+      const response = await fetch(`/api/rankings/${item.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: item.title,
+          description: item.description,
+          url: item.url,
+          position: newPosition
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update position');
+      }
+
+      // ランキングデータの楽観的更新
+      const currentKey = currentViewState.isMainCategoryView 
+        ? `main_${currentViewState.selectedMainCategoryId}` 
+        : currentViewState.selectedCategory;
+      
+      state.setRankingsWithTimestamp(prev => {
+        const currentRankings = prev[currentKey] || {};
+        const updatedRankings = { ...currentRankings };
+        
+        // 古い位置からアイテムを削除
+        delete updatedRankings[oldPosition];
+        
+        // 新しい位置にアイテムを配置
+        updatedRankings[newPosition] = {
+          ...item,
+          position: newPosition
+        };
+        
+        return {
+          ...prev,
+          [currentKey]: updatedRankings
+        };
+      }, currentKey);
+      
+      // ハイライト表示
+      state.setHighlightPosition(newPosition);
+      
+    } catch (error) {
+      console.error("Error moving item:", error);
+      alert("アイテムの移動に失敗しました。");
+    } finally {
       state.setSelectedItemForMove(null);
     }
   };
@@ -267,13 +320,39 @@ export default function UserRankingClient({
     state.setSelectedSubCategoryId(currentViewState.selectedSubCategoryId);
     state.setIsMainCategoryView(currentViewState.isMainCategoryView);
 
-    // データ取得
+    // データ取得（既にデータが存在する場合は取得をスキップ）
     if (currentViewState.isMainCategoryView && currentViewState.selectedMainCategoryId) {
-      api.fetchMainCategoryRankings(currentViewState.selectedMainCategoryId);
+      const dataKey = `main_${currentViewState.selectedMainCategoryId}`;
+      const existingData = state.rankings[dataKey];
+      
+      // データが存在しないか、空の場合、かつ最近更新されていない場合のみ取得
+      if (!existingData || Object.keys(existingData).length === 0) {
+        if (state.isRecentlyUpdated(dataKey)) {
+          console.log('[UserRankingClient] Skipping fetch - recently updated:', dataKey);
+        } else {
+          console.log('[UserRankingClient] Fetching main category data:', currentViewState.selectedMainCategoryId);
+          api.fetchMainCategoryRankings(currentViewState.selectedMainCategoryId);
+        }
+      } else {
+        console.log('[UserRankingClient] Skipping fetch - data already exists:', dataKey, Object.keys(existingData).length, 'items');
+      }
     } else if (!currentViewState.isMainCategoryView && currentViewState.selectedSubCategoryId) {
-      api.fetchSubCategoryRankings(currentViewState.selectedSubCategoryId, currentViewState.selectedCategory);
+      const dataKey = currentViewState.selectedCategory;
+      const existingData = state.rankings[dataKey];
+      
+      // データが存在しないか、空の場合、かつ最近更新されていない場合のみ取得
+      if (!existingData || Object.keys(existingData).length === 0) {
+        if (state.isRecentlyUpdated(dataKey)) {
+          console.log('[UserRankingClient] Skipping fetch - recently updated:', dataKey);
+        } else {
+          console.log('[UserRankingClient] Fetching sub category data:', currentViewState.selectedSubCategoryId, currentViewState.selectedCategory);
+          api.fetchSubCategoryRankings(currentViewState.selectedSubCategoryId, currentViewState.selectedCategory);
+        }
+      } else {
+        console.log('[UserRankingClient] Skipping fetch - data already exists:', dataKey, Object.keys(existingData).length, 'items');
+      }
     }
-  }, [searchParams.toString()]);
+  }, [searchParams.toString(), state.rankings]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative">
@@ -397,7 +476,16 @@ export default function UserRankingClient({
                   onTogglePin={pinFeature.handleTogglePin}
                   onShareItem={shareFeature.handleShareItem}
                   onEditItem={modals.openEditRankingItemModal}
-                  onDeleteItem={api.deleteRankingItem}
+                  onDeleteItem={(itemId: string, isReference?: boolean, referenceId?: string) => 
+                    api.deleteRankingItem(
+                      itemId,
+                      isReference,
+                      referenceId,
+                      currentViewState.selectedMainCategoryId,
+                      currentViewState.selectedSubCategoryId,
+                      currentViewState.selectedCategory
+                    )
+                  }
                   onMoveItem={handleMoveItem}
                   onAddItem={modals.openAddRankingItemModal}
                   onImageClick={(url, alt) => state.setSelectedImageModal({ url, alt })}
@@ -455,8 +543,103 @@ export default function UserRankingClient({
           categoryName={currentViewState.isMainCategoryView ? currentViewState.selectedMainCategory : currentViewState.selectedCategory}
           isMainCategoryView={currentViewState.isMainCategoryView}
           subCategories={currentViewState.isMainCategoryView ? state.allCategories.find(cat => cat.id === currentViewState.selectedMainCategoryId)?.subCategories : undefined}
-          onAdd={async () => {
-            // TODO: ランキングアイテム追加処理
+          onAdd={async (title: string, description: string, url?: string, subCategoryId?: string, existingItemId?: string, imageUrl?: string) => {
+            try {
+              // APIデータの準備
+              const createData = {
+                title,
+                description,
+                url,
+                position: modals.targetPosition,
+                subCategoryId: currentViewState.isMainCategoryView ? subCategoryId : currentViewState.selectedSubCategoryId,
+                mainCategoryId: currentViewState.isMainCategoryView ? currentViewState.selectedMainCategoryId : undefined,
+                existingItemId
+              };
+
+              // API呼び出し
+              const response = await fetch('/api/rankings', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(createData),
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to create ranking item');
+              }
+
+              const newItem = await response.json();
+              
+              // 画像アップロード（imageUrlがある場合）
+              let finalImages = [];
+              if (imageUrl && newItem.id) {
+                console.log('Uploading image:', imageUrl);
+                try {
+                  const imageResponse = await fetch(`/api/rankings/${newItem.id}/images`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ images: [imageUrl] }),
+                  });
+                  
+                  if (imageResponse.ok) {
+                    const imageData = await imageResponse.json();
+                    console.log('Image upload response:', imageData);
+                    finalImages = imageData.images || [];
+                    console.log('Final images:', finalImages);
+                  } else {
+                    console.error('Failed to upload image:', imageResponse.status);
+                  }
+                } catch (error) {
+                  console.error('Error uploading image:', error);
+                }
+              }
+
+              // ランキングデータの楽観的更新
+              const currentKey = currentViewState.isMainCategoryView 
+                ? `main_${currentViewState.selectedMainCategoryId}` 
+                : currentViewState.selectedCategory;
+              
+              console.log('[UserRankingClient] Optimistic update - adding item to:', currentKey, 'position:', modals.targetPosition);
+              
+              state.setRankingsWithTimestamp(prev => {
+                const currentRankings = prev[currentKey] || {};
+                const updatedRankings = { ...currentRankings };
+                
+                // 新しいアイテムを追加（最新の画像データを使用）
+                console.log('Optimistic update - final images:', finalImages);
+                
+                updatedRankings[modals.targetPosition] = {
+                  id: newItem.id,
+                  title: newItem.title,
+                  description: newItem.description,
+                  url: newItem.url,
+                  images: finalImages,
+                  isPinned: newItem.isPinned || false,
+                  sourceSubCategoryName: newItem.sourceSubCategoryName,
+                  sourceSubCategoryId: newItem.sourceSubCategoryId,
+                  isReference: newItem.isReference,
+                  referenceId: newItem.referenceId,
+                };
+                
+                return {
+                  ...prev,
+                  [currentKey]: updatedRankings
+                };
+              }, currentKey);
+              
+              // ハイライト表示
+              state.setHighlightPosition(modals.targetPosition);
+              
+              // モーダルを閉じる
+              modals.closeAddRankingItemModal();
+              
+            } catch (error) {
+              console.error("Error adding ranking item:", error);
+              alert("アイテムの追加に失敗しました。");
+            }
           }}
         />
       )}
@@ -467,8 +650,87 @@ export default function UserRankingClient({
           onClose={modals.closeEditRankingItemModal}
           item={modals.selectedItemForEdit}
           totalItems={Object.keys(currentRankings).length}
-          onSave={async () => {
-            // TODO: ランキングアイテム編集処理
+          onSave={async (id: string, title: string, description: string, url: string, imageUrls?: string[], position?: number) => {
+            try {
+              // API呼び出し
+              const response = await fetch(`/api/rankings/${id}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  title,
+                  description,
+                  url,
+                  position
+                }),
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to update ranking item');
+              }
+
+              // 画像データを更新
+              let updatedImages = modals.selectedItemForEdit?.images || [];
+              if (imageUrls) {
+                try {
+                  const imageResponse = await fetch(`/api/rankings/${id}/images`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ images: imageUrls }),
+                  });
+                  
+                  if (imageResponse.ok) {
+                    const imageData = await imageResponse.json();
+                    updatedImages = imageData.images || [];
+                  }
+                } catch (error) {
+                  console.error('Error updating images:', error);
+                  // 画像更新に失敗しても、テキスト更新は続行
+                }
+              }
+
+              // ランキングデータの楽観的更新（画像も含む）
+              const currentKey = currentViewState.isMainCategoryView 
+                ? `main_${currentViewState.selectedMainCategoryId}` 
+                : currentViewState.selectedCategory;
+              
+              console.log('[UserRankingClient] Optimistic update - editing item in:', currentKey, 'id:', id);
+              
+              state.setRankingsWithTimestamp(prev => {
+                const currentRankings = prev[currentKey] || {};
+                const updatedRankings = { ...currentRankings };
+                
+                // 既存のアイテムを見つけて更新
+                for (const [pos, item] of Object.entries(updatedRankings)) {
+                  if (item.id === id) {
+                    updatedRankings[parseInt(pos)] = {
+                      ...item,
+                      title,
+                      description,
+                      url,
+                      images: updatedImages,
+                      ...(position && { position })
+                    };
+                    break;
+                  }
+                }
+                
+                return {
+                  ...prev,
+                  [currentKey]: updatedRankings
+                };
+              }, currentKey);
+              
+              // モーダルを閉じる
+              modals.closeEditRankingItemModal();
+              
+            } catch (error) {
+              console.error("Error updating ranking item:", error);
+              alert("アイテムの更新に失敗しました。");
+            }
           }}
         />
       )}

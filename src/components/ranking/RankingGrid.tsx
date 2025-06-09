@@ -146,6 +146,7 @@ export default function RankingGrid({
                 
                 {item?.images && item.images.length > 0 && !item?.isDeleted && (
                   <div className="mt-3">
+                    {console.log(`RankingGrid - Item ${position} images:`, item.images)}
                     <div 
                       className="relative overflow-hidden rounded-xl border-2 border-purple-200 w-32 h-32 cursor-pointer hover:border-purple-400 transition-all transform hover:scale-105 shadow-md hover:shadow-lg group/image"
                       onClick={() => onImageClick(item.images![0].url, `${item.title} - 画像`)}
@@ -156,7 +157,6 @@ export default function RankingGrid({
                         fill
                         className="object-cover group-hover/image:scale-110 transition-transform duration-300"
                         sizes="(max-width: 768px) 128px, 128px"
-                        unoptimized
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                         }}

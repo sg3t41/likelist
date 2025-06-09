@@ -59,7 +59,7 @@ export async function POST(
       orderBy: { order: 'asc' },
     });
 
-    return NextResponse.json(updatedImages);
+    return NextResponse.json({ images: updatedImages });
   } catch (error) {
     console.error("Error updating images:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

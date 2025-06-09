@@ -9,6 +9,7 @@ import { RankingService } from '@/services/rankingService';
 interface UseRankingPinProps {
   rankings: Rankings;
   setRankings: React.Dispatch<React.SetStateAction<Rankings>>;
+  setRankingsWithTimestamp: (updater: React.SetStateAction<Rankings>, dataKey?: string) => void;
   isMainCategoryView: boolean;
   selectedMainCategoryId: string;
   selectedCategory: string;
@@ -17,6 +18,7 @@ interface UseRankingPinProps {
 export function useRankingPin({
   rankings,
   setRankings,
+  setRankingsWithTimestamp,
   isMainCategoryView,
   selectedMainCategoryId,
   selectedCategory,
@@ -25,8 +27,8 @@ export function useRankingPin({
     const newPinState = !item.isPinned;
     
     // 即座にローカル状態を更新
-    setRankings(prev => {
-      const currentKey = isMainCategoryView ? `main_${selectedMainCategoryId}` : selectedCategory;
+    const currentKey = isMainCategoryView ? `main_${selectedMainCategoryId}` : selectedCategory;
+    setRankingsWithTimestamp(prev => {
       const currentRankings = prev[currentKey] || {};
       
       // アイテムの位置を見つける（配列に変換して安全に検索）
@@ -53,7 +55,7 @@ export function useRankingPin({
       }
       
       return prev;
-    });
+    }, currentKey);
 
     // APIコール
     try {
@@ -66,7 +68,7 @@ export function useRankingPin({
     } catch (error) {
       console.error("Error toggling pin:", error);
       
-      // エラーの場合は状態を元に戻す
+      // エラーの場合は状態を元に戻す（タイムスタンプは更新しない）
       setRankings(prev => {
         const currentKey = isMainCategoryView ? `main_${selectedMainCategoryId}` : selectedCategory;
         const currentRankings = prev[currentKey] || {};

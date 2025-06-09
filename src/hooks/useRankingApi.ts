@@ -33,6 +33,8 @@ export function useRankingApi({
       const rankingMap: RankingMap = {};
       items.forEach((item: any) => {
         const position = item.position || Object.keys(rankingMap).length + 1;
+        console.log(`Main category API response - Item ${position}:`, item);
+        console.log(`Images for item ${position}:`, item.images);
         rankingMap[position] = {
           id: item.id,
           title: item.title,
@@ -47,6 +49,7 @@ export function useRankingApi({
         };
       });
       
+      console.log('[useRankingApi] Setting main category rankings:', `main_${mainCategoryId}`, Object.keys(rankingMap).length, 'items');
       setRankings(prev => ({
         ...prev,
         [`main_${mainCategoryId}`]: rankingMap,
@@ -69,6 +72,8 @@ export function useRankingApi({
       const rankingMap: RankingMap = {};
       items.forEach((item: any) => {
         const position = item.position || Object.keys(rankingMap).length + 1;
+        console.log(`Sub category API response - Item ${position}:`, item);
+        console.log(`Images for item ${position}:`, item.images);
         rankingMap[position] = {
           id: item.id,
           title: item.title,
@@ -79,6 +84,7 @@ export function useRankingApi({
         };
       });
       
+      console.log('[useRankingApi] Setting sub category rankings:', categoryName, Object.keys(rankingMap).length, 'items');
       setRankings(prev => ({
         ...prev,
         [categoryName]: rankingMap,
@@ -106,31 +112,52 @@ export function useRankingApi({
   const deleteRankingItem = useCallback(async (
     itemId: string,
     isReference: boolean = false,
-    referenceId?: string
+    referenceId?: string,
+    currentMainCategoryId?: string,
+    currentSubCategoryId?: string,
+    currentCategoryName?: string
   ) => {
     if (!confirm("この項目を削除しますか？")) {
       return;
     }
 
     try {
+      console.log('Deleting item:', { itemId, isReference, referenceId, currentMainCategoryId, currentSubCategoryId, currentCategoryName });
+      
       if (isReference && referenceId) {
         // 参照アイテムの場合
-        await fetch(`/api/rankings/main-category/${referenceId}`, {
+        const response = await fetch(`/api/rankings/main-category/${referenceId}`, {
           method: 'DELETE',
         });
+        if (!response.ok) {
+          throw new Error(`Failed to delete reference: ${response.status}`);
+        }
+        console.log('Reference deleted successfully');
       } else {
         // 通常のアイテムの場合
         await RankingService.deleteRanking(itemId);
+        console.log('Item deleted successfully');
       }
       
-      // 成功した場合、現在のビューを再取得
+      // 成功した場合、現在のビューのデータを再取得
+      if (currentMainCategoryId) {
+        // メインカテゴリビューの場合
+        console.log('Refreshing main category rankings:', currentMainCategoryId);
+        await fetchMainCategoryRankings(currentMainCategoryId);
+      } else if (currentSubCategoryId && currentCategoryName) {
+        // サブカテゴリビューの場合
+        console.log('Refreshing subcategory rankings:', currentSubCategoryId, currentCategoryName);
+        await fetchSubCategoryRankings(currentSubCategoryId, currentCategoryName);
+      }
+      
+      console.log('Rankings refreshed successfully');
       return true;
     } catch (error) {
       console.error("Error deleting ranking item:", error);
       alert("削除に失敗しました");
       return false;
     }
-  }, []);
+  }, [fetchMainCategoryRankings, fetchSubCategoryRankings]);
 
   return {
     fetchMainCategoryRankings,

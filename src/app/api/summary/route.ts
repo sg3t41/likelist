@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     let items;
 
     if (type === "pinned") {
-      // ピン留めされたアイテムを取得
+      // ピン留めされたアイテムを取得（メインカテゴリ参照も含む）
       items = await prisma.rankingItem.findMany({
         where: {
           userId: userId,
@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
             },
           },
           mainCategory: true,
+          mainCategoryReferences: true, // メインカテゴリ参照も取得
           images: {
             orderBy: { order: "asc" },
             take: 1,
@@ -71,6 +72,7 @@ export async function GET(request: NextRequest) {
             },
           },
           mainCategory: true,
+          mainCategoryReferences: true, // メインカテゴリ参照も取得
           images: {
             orderBy: { order: "asc" },
             take: 1,
@@ -84,15 +86,25 @@ export async function GET(request: NextRequest) {
     }
 
     // レスポンス用にデータを整形
+    console.log('[Summary API] Raw items:', items.map(i => ({ 
+      id: i.id, 
+      title: i.title, 
+      position: i.position, 
+      subCategoryId: i.subCategoryId,
+      mainCategoryId: i.mainCategoryId,
+      mainCategoryReferences: i.mainCategoryReferences
+    })));
+    
     const formattedItems = items.map((item) => {
       // 小カテゴリに紐付いている場合
       if (item.subCategory) {
+        // サブカテゴリの順位を優先して表示
         return {
           id: item.id,
           title: item.title,
           description: item.description,
           url: item.url,
-          position: item.position,
+          position: item.position, // サブカテゴリ内での順位
           isPinned: item.isPinned,
           images: item.images,
           updatedAt: item.updatedAt,
@@ -111,7 +123,7 @@ export async function GET(request: NextRequest) {
           title: item.title,
           description: item.description,
           url: item.url,
-          position: item.position,
+          position: item.position, // メインカテゴリ内での順位
           isPinned: item.isPinned,
           images: item.images,
           updatedAt: item.updatedAt,

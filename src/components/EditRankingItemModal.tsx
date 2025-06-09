@@ -14,7 +14,7 @@ interface EditRankingItemModalProps {
     position?: number;
   } | null;
   totalItems: number;
-  onSave: (id: string, title: string, description: string, url: string, position?: number) => Promise<void>;
+  onSave: (id: string, title: string, description: string, url: string, imageUrls?: string[], position?: number) => Promise<void>;
 }
 
 export default function EditRankingItemModal({ 
@@ -69,32 +69,16 @@ export default function EditRankingItemModal({
 
     setIsLoading(true);
     try {
-      // 画像を更新（空の配列でも送信して既存画像をクリア）
-      setIsSavingImages(true);
+      // onSaveに全ての更新処理を委託（画像も含む）
       const validUrls = imageUrls.filter(url => url.trim());
-      const response = await fetch(`/api/rankings/${item.id}/images`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ images: validUrls }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Failed to update images:', errorData);
-        throw new Error('画像の更新に失敗しました');
-      }
-      
-      // タイトル、説明、URLを保存（これにより再取得がトリガーされる）
-      await onSave(item.id, title, description, url);
+      await onSave(item.id, title, description, url, validUrls);
       
       onClose();
     } catch (error) {
       console.error("Error editing ranking item:", error);
+      alert("アイテムの更新に失敗しました。");
     } finally {
       setIsLoading(false);
-      setIsSavingImages(false);
     }
   };
 

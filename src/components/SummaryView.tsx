@@ -31,6 +31,8 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
   const [activeTab, setActiveTab] = useState<"recent" | "pinned">("pinned");
   const [items, setItems] = useState<SummaryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [removingItemId, setRemovingItemId] = useState<string | null>(null);
+  const [showUnpinMessage, setShowUnpinMessage] = useState(false);
 
   const fetchSummaryData = async (type: "recent" | "pinned") => {
     setLoading(true);
@@ -55,12 +57,27 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
     fetchSummaryData(activeTab);
   }, [activeTab, pageUser.id]);
 
-  // ピン留め状態変更を監視（即座に反映）
+  // ピン留め状態変更を監視（楽観的更新）
   useEffect(() => {
     const handlePinChange = (event: CustomEvent) => {
-      // ピン留めタブの場合は即座に更新
+      const { itemId, isPinned } = event.detail || {};
+      
       if (activeTab === "pinned") {
-        fetchSummaryData("pinned");
+        if (isPinned) {
+          // ピン留めされた場合は即座にリストを更新
+          fetchSummaryData("pinned");
+        } else {
+          // ピン留め解除の場合はアニメーション付きで削除
+          setRemovingItemId(itemId);
+          setShowUnpinMessage(true);
+          setTimeout(() => {
+            setItems(prevItems => prevItems.filter(item => item.id !== itemId));
+            setRemovingItemId(null);
+          }, 300); // アニメーション時間
+          setTimeout(() => {
+            setShowUnpinMessage(false);
+          }, 3000); // 3秒後にメッセージを非表示
+        }
       }
     };
 
@@ -127,7 +144,7 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
+    <div className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 overflow-hidden relative">
       {/* ヘッダー */}
       <div className="px-6 py-5 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100">
         <div className="flex items-center justify-between mb-4">
@@ -192,7 +209,11 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
             <div
               key={item.id}
               onClick={() => handleItemClick(item)}
-              className="mx-4 mb-3 p-4 bg-white rounded-xl border border-gray-100 hover:border-purple-200 hover:shadow-lg cursor-pointer transition-all duration-200 group transform hover:scale-[1.02] relative"
+              className={`mx-4 mb-3 p-4 bg-white rounded-xl border border-gray-100 hover:border-purple-200 hover:shadow-lg cursor-pointer transition-all duration-200 group transform hover:scale-[1.02] relative ${
+                removingItemId === item.id 
+                  ? 'opacity-0 scale-95 translate-x-full' 
+                  : 'opacity-100 scale-100 translate-x-0'
+              }`}
             >
               {/* ピン留めマーク - 右上に配置 */}
               {item.isPinned && (
@@ -212,7 +233,6 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-300"
                       sizes="64px"
-                      unoptimized
                     />
                   </div>
                 )}
@@ -285,6 +305,13 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
           ))
         )}
       </div>
+      
+      {/* ピン留め解除メッセージ */}
+      {showUnpinMessage && (
+        <div className="absolute top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg animate-pulse">
+          📌 ピン留めを解除しました
+        </div>
+      )}
     </div>
   );
 }
