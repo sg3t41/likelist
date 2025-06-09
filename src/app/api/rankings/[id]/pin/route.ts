@@ -30,13 +30,28 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // ピン留め状態を更新
+    // ピン留め状態を更新（関連情報も含めて取得）
     const updatedItem = await prisma.rankingItem.update({
       where: { id },
       data: { isPinned },
+      include: {
+        subCategory: {
+          include: {
+            mainCategory: true,
+          },
+        },
+        mainCategory: true,
+        images: {
+          orderBy: { order: "asc" },
+          take: 1,
+        },
+      },
     });
 
-    return NextResponse.json(updatedItem);
+    // キャッシュ無効化のためのヘッダーを設定
+    const response = NextResponse.json(updatedItem);
+    response.headers.set('Cache-Control', 'no-store');
+    return response;
   } catch (error) {
     console.error("Error updating pin status:", error);
     return NextResponse.json(

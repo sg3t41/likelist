@@ -37,7 +37,9 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
     try {
       const limit = type === "recent" ? 10 : undefined;
       const url = `/api/summary?userId=${pageUser.id}&type=${type}${limit ? `&limit=${limit}` : ''}`;
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        cache: 'no-store' // キャッシュを無効化
+      });
       if (response.ok) {
         const data = await response.json();
         setItems(data.items);
@@ -53,32 +55,20 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
     fetchSummaryData(activeTab);
   }, [activeTab, pageUser.id]);
 
-  // ピン留め状態変更を監視（デバウンス付き）
+  // ピン留め状態変更を監視（即座に反映）
   useEffect(() => {
-    let debounceTimer: NodeJS.Timeout | null = null;
-
-    const handlePinChange = () => {
-      // 既存のタイマーをクリア
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
+    const handlePinChange = (event: CustomEvent) => {
+      // ピン留めタブの場合は即座に更新
+      if (activeTab === "pinned") {
+        fetchSummaryData("pinned");
       }
-      
-      // 300ms後に実行（重複呼び出しを防ぐ）
-      debounceTimer = setTimeout(() => {
-        if (activeTab === "pinned") {
-          fetchSummaryData("pinned");
-        }
-      }, 300);
     };
 
     // カスタムイベントリスナーを追加
-    window.addEventListener('pinStatusChanged', handlePinChange);
+    window.addEventListener('pinStatusChanged', handlePinChange as EventListener);
     
     return () => {
-      window.removeEventListener('pinStatusChanged', handlePinChange);
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
+      window.removeEventListener('pinStatusChanged', handlePinChange as EventListener);
     };
   }, [activeTab]);
 
@@ -146,7 +136,7 @@ export default function SummaryView({ pageUser }: SummaryViewProps) {
               <span className="text-white text-lg">🏆</span>
             </div>
             <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              すべての好きなものリスト
+              ピックアップ
             </h2>
           </div>
         </div>

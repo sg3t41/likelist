@@ -6,12 +6,14 @@ import { PageUser } from "@/types";
 interface UserProfileSectionProps {
   pageUser: PageUser;
   categoryCount?: number;
+  subCategoryCount?: number;
   itemCount?: number;
 }
 
 export default function UserProfileSection({ 
   pageUser, 
   categoryCount = 0,
+  subCategoryCount = 0,
   itemCount = 0 
 }: UserProfileSectionProps) {
   const userName = pageUser.name || `@${pageUser.username}` || "ユーザー";
@@ -58,24 +60,27 @@ export default function UserProfileSection({
           </div>
           
 
-          {/* 統計情報 */}
-          <div className="flex items-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center">
-                <span className="text-white text-sm">⭐</span>
+          {/* 統計情報 - インライン表示 */}
+          <div className="flex items-center gap-3 sm:gap-4 mt-2 flex-wrap">
+            <div className="flex items-center gap-2 bg-purple-50 px-3 py-2 rounded-full border border-purple-200 w-40">
+              <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs">📁</span>
               </div>
-              <span className="text-gray-600">
-                <span className="font-semibold text-gray-900">{categoryCount}</span> カテゴリ
-              </span>
+              <span className="text-sm font-semibold text-purple-700 whitespace-nowrap">{categoryCount} カテゴリ</span>
             </div>
             
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-red-500 rounded-lg flex items-center justify-center">
-                <span className="text-white text-sm">📋</span>
+            <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-full border border-blue-200 w-40">
+              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs">🏷️</span>
               </div>
-              <span className="text-gray-600">
-                <span className="font-semibold text-gray-900">{itemCount}</span> アイテム
-              </span>
+              <span className="text-sm font-semibold text-blue-700 whitespace-nowrap">{subCategoryCount} サブカテゴリ</span>
+            </div>
+            
+            <div className="flex items-center gap-2 bg-pink-50 px-3 py-2 rounded-full border border-pink-200 w-40">
+              <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs">📋</span>
+              </div>
+              <span className="text-sm font-semibold text-pink-700 whitespace-nowrap">{itemCount} アイテム</span>
             </div>
           </div>
         </div>

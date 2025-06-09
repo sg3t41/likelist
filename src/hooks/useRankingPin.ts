@@ -29,16 +29,15 @@ export function useRankingPin({
       const currentKey = isMainCategoryView ? `main_${selectedMainCategoryId}` : selectedCategory;
       const currentRankings = prev[currentKey] || {};
       
-      // アイテムの位置を見つける
-      let itemPosition: number | null = null;
-      for (const [pos, rankingItem] of Object.entries(currentRankings)) {
-        if (rankingItem.id === item.id) {
-          itemPosition = parseInt(pos);
-          break;
-        }
-      }
+      // アイテムの位置を見つける（配列に変換して安全に検索）
+      const rankingsArray = Object.entries(currentRankings)
+        .map(([pos, item]) => ({ position: parseInt(pos), item }))
+        .sort((a, b) => a.position - b.position);
       
-      if (itemPosition) {
+      const foundIndex = rankingsArray.findIndex(({ item: rankingItem }) => rankingItem.id === item.id);
+      
+      if (foundIndex !== -1) {
+        const itemPosition = rankingsArray[foundIndex].position;
         const updatedRankings = {
           ...currentRankings,
           [itemPosition]: {
@@ -60,8 +59,10 @@ export function useRankingPin({
     try {
       await RankingService.togglePin(item.id, newPinState);
       
-      // 成功した場合、SummaryViewに変更を通知
-      window.dispatchEvent(new CustomEvent('pinStatusChanged'));
+      // 成功した場合、SummaryViewに変更を通知（詳細情報を含む）
+      window.dispatchEvent(new CustomEvent('pinStatusChanged', {
+        detail: { itemId: item.id, isPinned: newPinState }
+      }));
     } catch (error) {
       console.error("Error toggling pin:", error);
       
@@ -70,15 +71,15 @@ export function useRankingPin({
         const currentKey = isMainCategoryView ? `main_${selectedMainCategoryId}` : selectedCategory;
         const currentRankings = prev[currentKey] || {};
         
-        let itemPosition: number | null = null;
-        for (const [pos, rankingItem] of Object.entries(currentRankings)) {
-          if (rankingItem.id === item.id) {
-            itemPosition = parseInt(pos);
-            break;
-          }
-        }
+        // アイテムの位置を見つける（配列に変換して安全に検索）
+        const rankingsArray = Object.entries(currentRankings)
+          .map(([pos, item]) => ({ position: parseInt(pos), item }))
+          .sort((a, b) => a.position - b.position);
         
-        if (itemPosition) {
+        const foundIndex = rankingsArray.findIndex(({ item: rankingItem }) => rankingItem.id === item.id);
+        
+        if (foundIndex !== -1) {
+          const itemPosition = rankingsArray[foundIndex].position;
           const revertedRankings = {
             ...currentRankings,
             [itemPosition]: {

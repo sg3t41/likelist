@@ -28,6 +28,7 @@ import AddCategoryModal from "@/components/AddCategoryModal";
 import AddSubCategoryModal from "@/components/AddSubCategoryModal";
 import AddRankingItemModal from "@/components/AddRankingItemModal";
 import EditRankingItemModal from "@/components/EditRankingItemModal";
+import DeleteCategoryModal from "@/components/DeleteCategoryModal";
 
 interface UserRankingClientProps {
   pageUser: PageUser;
@@ -354,8 +355,9 @@ export default function UserRankingClient({
               <div className="space-y-8">
                 <UserProfileSection 
                   pageUser={pageUser} 
-                  categoryCount={categoryCount}
-                  itemCount={itemCount}
+                  categoryCount={state.allCategories.length}
+                  subCategoryCount={state.allCategories.reduce((total, cat) => total + (cat.subCategories?.length || 0), 0)}
+                  itemCount={totalItemCount}
                 />
                 <SummaryView pageUser={pageUser} />
               </div>
@@ -363,8 +365,9 @@ export default function UserRankingClient({
               <div className="space-y-8">
                 <UserProfileSection 
                   pageUser={pageUser} 
-                  categoryCount={categoryCount}
-                  itemCount={itemCount}
+                  categoryCount={state.allCategories.length}
+                  subCategoryCount={state.allCategories.reduce((total, cat) => total + (cat.subCategories?.length || 0), 0)}
+                  itemCount={totalItemCount}
                 />
                 <div className="bg-white rounded-lg shadow">
                 <RankingToolbar
@@ -486,6 +489,39 @@ export default function UserRankingClient({
           onClose={() => state.setSelectedImageModal(null)}
         />
       )}
+
+      <DeleteCategoryModal
+        isOpen={state.showDeleteCategoryModal}
+        onClose={() => {
+          state.setShowDeleteCategoryModal(false);
+          state.setCategoryToDelete(null);
+        }}
+        category={state.categoryToDelete}
+        onConfirm={async () => {
+          if (!state.categoryToDelete) return;
+          
+          try {
+            if (state.categoryToDelete.type === 'main') {
+              await CategoryService.deleteCategory(state.categoryToDelete.id);
+              // メインカテゴリ削除後はホーム画面へリダイレクト
+              router.push(`/u/${pageUser.id}`);
+            } else {
+              await CategoryService.deleteSubCategory(state.categoryToDelete.id);
+              // サブカテゴリ削除後はメインカテゴリビューへリダイレクト
+              const mainCat = state.allCategories.find(cat => 
+                cat.subCategories.some((sub: any) => sub.id === state.categoryToDelete?.id)
+              );
+              if (mainCat) {
+                router.push(`/u/${pageUser.id}?mainCategoryId=${mainCat.id}&mainCategory=${encodeURIComponent(mainCat.name)}&view=main`);
+              }
+            }
+            await api.refreshCategories();
+          } catch (error) {
+            console.error("Error deleting category:", error);
+            alert("カテゴリの削除に失敗しました。");
+          }
+        }}
+      />
     </div>
   );
 }

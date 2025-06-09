@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// キャッシュ設定: 10分間キャッシュ
-export const revalidate = 600
+// キャッシュ設定: ピン留めの場合はキャッシュしない
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
@@ -125,13 +125,19 @@ export async function GET(request: NextRequest) {
       }
     }).filter(Boolean); // nullを除外
 
-    // キャッシュヘッダーを設定
+    // キャッシュヘッダーを設定（ピン留めの場合はキャッシュしない）
     const response = NextResponse.json({
       items: formattedItems,
       type,
       total: formattedItems.length,
     });
-    response.headers.set('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200');
+    
+    if (type === 'pinned') {
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    } else {
+      response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    }
+    
     return response;
   } catch (error) {
     console.error("Error fetching summary:", error);
