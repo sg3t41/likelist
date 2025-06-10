@@ -31,12 +31,6 @@ export const metadata: Metadata = {
   title: "すきなものリスト",
   description: "あなたの好きなものを整理してシェアしよう",
   metadataBase: new URL('https://sukilist.jp'),
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "すきなものリスト",
-  },
   formatDetection: {
     telephone: false,
   },
@@ -64,9 +58,10 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport = {
-  themeColor: "#8B5CF6",
-};
+// PWA関連のviewport設定を削除
+// export const viewport = {
+//   themeColor: "#8B5CF6",
+// };
 
 export default function RootLayout({
   children,
