@@ -38,10 +38,55 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const baseUrl = "https://sukilist.jp";
   const pageUrl = `${baseUrl}/u/${userId}`;
   
-  // カテゴリ情報を取得
+  // デフォルト値を設定
   let categoryInfo = "";
   let description = `${userName}さんの好きなものリスト`;
   let pageTitle = `${userName}さんの好きなものリスト`;
+  let ogImage = user.image || `${baseUrl}/og-default.png`;
+  let ogImageAlt = `${userName}さんのプロフィール画像`;
+
+  // highlightパラメータがある場合、アイテムの情報を取得
+  if (urlParams.highlight) {
+    const highlightedItem = await prisma.rankingItem.findUnique({
+      where: {
+        id: urlParams.highlight as string,
+        userId: user.id,
+      },
+      include: {
+        images: {
+          orderBy: { order: "asc" },
+          take: 1,
+        },
+        subCategory: {
+          include: {
+            mainCategory: true,
+          },
+        },
+        mainCategory: true,
+      },
+    });
+
+    if (highlightedItem) {
+      // アイテムのタイトルと説明を設定
+      pageTitle = `${highlightedItem.title} | ${userName}さんの好きなものリスト`;
+      
+      // カテゴリ情報を構築
+      if (highlightedItem.subCategory) {
+        categoryInfo = `${highlightedItem.subCategory.mainCategory.name} - ${highlightedItem.subCategory.name}`;
+      } else if (highlightedItem.mainCategory) {
+        categoryInfo = highlightedItem.mainCategory.name;
+      }
+      
+      description = highlightedItem.description || 
+        `${userName}さんがおすすめする「${highlightedItem.title}」${categoryInfo ? `（${categoryInfo}）` : ''}`;
+      
+      // アイテムの画像があればOGP画像として使用
+      if (highlightedItem.images && highlightedItem.images.length > 0) {
+        ogImage = highlightedItem.images[0].url;
+        ogImageAlt = highlightedItem.title;
+      }
+    }
+  }
 
   try {
     // URLパラメータから現在の表示内容を判定
@@ -151,6 +196,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   if (urlParams.subCategoryId) currentUrl.searchParams.set('subCategoryId', urlParams.subCategoryId as string);
   if (urlParams.subCategory) currentUrl.searchParams.set('subCategory', urlParams.subCategory as string);
   if (urlParams.view) currentUrl.searchParams.set('view', urlParams.view as string);
+  if (urlParams.highlight) currentUrl.searchParams.set('highlight', urlParams.highlight as string);
 
   return {
     title: pageTitle,
@@ -185,21 +231,21 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       siteName: "すきなものリスト",
       images: [
         {
-          url: user.image || `${baseUrl}/og-default.png`,
+          url: ogImage,
           width: 1200,
           height: 630,
-          alt: `${userName}さんのプロフィール画像`,
+          alt: ogImageAlt,
         },
       ],
       locale: "ja_JP",
       type: "website",
     },
     twitter: {
-      card: "summary_large_image",
+      card: urlParams.highlight ? "summary" : "summary_large_image",
       title: pageTitle,
       description,
       creator: user.username ? `@${user.username}` : undefined,
-      images: [user.image || `${baseUrl}/og-default.png`],
+      images: [ogImage],
     },
     robots: {
       index: true,

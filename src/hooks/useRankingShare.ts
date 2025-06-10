@@ -30,7 +30,7 @@ export function useRankingShare({
   const handleShareItem = useCallback(async (item: RankingItem, position: number) => {
     const currentUrl = window.location.origin;
     const params = new URLSearchParams(window.location.search);
-    params.set('highlight', position.toString());
+    params.set('highlight', item.id);
     
     const shareUrl = `${currentUrl}/u/${pageUser.id}?${params.toString()}`;
     
