@@ -59,11 +59,11 @@ export function useRankingState({
     setRankings(updater);
   }, []);
 
-  // 最近更新されたかどうかをチェックする関数（5秒以内の更新はスキップ）
+  // 最近更新されたかどうかをチェックする関数（10秒以内の更新はスキップ）
   const isRecentlyUpdated = useCallback((dataKey: string): boolean => {
     const lastUpdate = lastUpdateTimestamps[dataKey];
     if (!lastUpdate) return false;
-    return Date.now() - lastUpdate < 5000; // 5秒以内
+    return Date.now() - lastUpdate < 10000; // 10秒以内（ピン留め操作の競合を防ぐ）
   }, [lastUpdateTimestamps]);
 
   // UI状態

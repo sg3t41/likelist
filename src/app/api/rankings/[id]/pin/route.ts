@@ -15,6 +15,12 @@ export async function POST(
 
     const { id } = await params;
     const { isPinned } = await request.json();
+    
+    console.log('[Pin API] Request:', { 
+      itemId: id, 
+      requestedPinState: isPinned,
+      userId: (session.user as any).userId 
+    });
 
     // アイテムの所有者確認
     const item = await prisma.rankingItem.findUnique({
@@ -46,6 +52,12 @@ export async function POST(
           take: 1,
         },
       },
+    });
+
+    console.log('[Pin API] Success:', { 
+      itemId: id, 
+      finalPinState: updatedItem.isPinned,
+      title: updatedItem.title 
     });
 
     // キャッシュ無効化のためのヘッダーを設定
