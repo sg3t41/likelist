@@ -11,8 +11,6 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-// ISR設定: 30分ごとに再生成
-export const revalidate = 1800
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { userId } = await params;

@@ -3,8 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 
-// キャッシュ設定: 5分間キャッシュ
-export const revalidate = 300
 
 export async function GET(request: NextRequest) {
   try {
