@@ -22,7 +22,7 @@ model User {
 
 model MainCategory {
   id             String                      @id @default(cuid())
-  name           String
+  name           String                      @db.VarChar(100)
   userId         String
   isPublic       Boolean                     @default(true)
   createdAt      DateTime                    @default(now())
@@ -37,7 +37,7 @@ model MainCategory {
 
 model SubCategory {
   id             String        @id @default(cuid())
-  name           String
+  name           String        @db.VarChar(100)
   mainCategoryId String
   userId         String
   isPublic       Boolean       @default(true)
@@ -52,10 +52,10 @@ model SubCategory {
 
 model RankingItem {
   id                     String                      @id @default(cuid())
-  title                  String
-  description            String?
-  url                    String?
-  position               Int?
+  title                  String                      @db.VarChar(200)
+  description            String?                     @db.Text
+  url                    String?                     @db.VarChar(500)
+  position               Int?                        @db.SmallInt
   isPinned               Boolean                     @default(false)
   subCategoryId          String?
   mainCategoryId         String?
@@ -67,6 +67,10 @@ model RankingItem {
   mainCategory           MainCategory?               @relation(fields: [mainCategoryId], references: [id], onDelete: Cascade)
   subCategory            SubCategory?                @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
   images                 RankingItemImage[]
+
+  // 同一カテゴリ内でのposition重複防止
+  @@unique([subCategoryId, position], name: "unique_sub_position")
+  @@unique([mainCategoryId, position], name: "unique_main_position")
 }
 
 model RankingItemImage {
@@ -82,10 +86,12 @@ model MainCategoryItemReference {
   id             String       @id @default(cuid())
   mainCategoryId String
   rankingItemId  String
-  position       Int?
+  position       Int?         @db.SmallInt
   createdAt      DateTime     @default(now())
   rankingItem    RankingItem  @relation(fields: [rankingItemId], references: [id], onDelete: Cascade)
   mainCategory   MainCategory @relation(fields: [mainCategoryId], references: [id], onDelete: Cascade)
 
   @@unique([mainCategoryId, rankingItemId])
+  // 同一大カテゴリ内でのposition重複防止
+  @@unique([mainCategoryId, position], name: "unique_ref_position")
 }

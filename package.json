@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "next lint",
     "db:push:dev": "prisma db push --schema=./prisma/schema.sqlite.prisma",
-    "fix-positions": "tsx scripts/fix-positions.ts"
+    "fix-positions": "tsx scripts/fix-positions.ts",
+    "analyze-data": "tsx scripts/analyze-data.ts",
+    "cleanup-db": "tsx scripts/cleanup-and-enforce.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
