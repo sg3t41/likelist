@@ -8,7 +8,8 @@
     "postbuild": "prisma db push",
     "start": "next start",
     "lint": "next lint",
-    "db:push:dev": "prisma db push --schema=./prisma/schema.sqlite.prisma"
+    "db:push:dev": "prisma db push --schema=./prisma/schema.sqlite.prisma",
+    "fix-positions": "tsx scripts/fix-positions.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
