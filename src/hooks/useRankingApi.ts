@@ -31,8 +31,14 @@ export function useRankingApi({
       });
       
       const rankingMap: RankingMap = {};
-      items.forEach((item: any) => {
-        const position = item.position || Object.keys(rankingMap).length + 1;
+      let nextPosition = 1;
+      
+      // positionが設定されているアイテムを先に処理
+      const itemsWithPosition = items.filter((item: any) => item.position != null);
+      const itemsWithoutPosition = items.filter((item: any) => item.position == null);
+      
+      itemsWithPosition.forEach((item: any) => {
+        const position = item.position;
         console.log(`Main category API response - Item ${position}:`, item);
         console.log(`Images for item ${position}:`, item.images);
         rankingMap[position] = {
@@ -47,6 +53,28 @@ export function useRankingApi({
           isReference: item.isReference,
           referenceId: item.referenceId,
         };
+        nextPosition = Math.max(nextPosition, position + 1);
+      });
+      
+      // positionがないアイテムを空きポジションに配置
+      itemsWithoutPosition.forEach((item: any) => {
+        while (rankingMap[nextPosition]) {
+          nextPosition++;
+        }
+        console.log(`Main category API response - Item assigned position ${nextPosition}:`, item);
+        rankingMap[nextPosition] = {
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          url: item.url,
+          images: item.images,
+          isPinned: item.isPinned,
+          sourceSubCategoryName: item.sourceSubCategoryName,
+          sourceSubCategoryId: item.sourceSubCategoryId,
+          isReference: item.isReference,
+          referenceId: item.referenceId,
+        };
+        nextPosition++;
       });
       
       console.log('[useRankingApi] Setting main category rankings:', `main_${mainCategoryId}`, Object.keys(rankingMap).length, 'items');
@@ -70,8 +98,14 @@ export function useRankingApi({
       });
       
       const rankingMap: RankingMap = {};
-      items.forEach((item: any) => {
-        const position = item.position || Object.keys(rankingMap).length + 1;
+      let nextPosition = 1;
+      
+      // positionが設定されているアイテムを先に処理
+      const itemsWithPosition = items.filter((item: any) => item.position != null);
+      const itemsWithoutPosition = items.filter((item: any) => item.position == null);
+      
+      itemsWithPosition.forEach((item: any) => {
+        const position = item.position;
         console.log(`Sub category API response - Item ${position}:`, item);
         console.log(`Images for item ${position}:`, item.images);
         rankingMap[position] = {
@@ -82,6 +116,24 @@ export function useRankingApi({
           images: item.images,
           isPinned: item.isPinned,
         };
+        nextPosition = Math.max(nextPosition, position + 1);
+      });
+      
+      // positionがないアイテムを空きポジションに配置
+      itemsWithoutPosition.forEach((item: any) => {
+        while (rankingMap[nextPosition]) {
+          nextPosition++;
+        }
+        console.log(`Sub category API response - Item assigned position ${nextPosition}:`, item);
+        rankingMap[nextPosition] = {
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          url: item.url,
+          images: item.images,
+          isPinned: item.isPinned,
+        };
+        nextPosition++;
       });
       
       console.log('[useRankingApi] Setting sub category rankings:', categoryName, Object.keys(rankingMap).length, 'items');

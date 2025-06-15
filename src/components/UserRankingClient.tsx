@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageUser, InitialSelection } from "@/types";
 import { useRankingState } from "@/hooks/useRankingState";
@@ -228,47 +228,58 @@ export default function UserRankingClient({
     const { item, position: oldPosition } = state.selectedItemForMove;
     
     try {
-      // API呼び出し
-      const response = await fetch(`/api/rankings/${item.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: item.title,
-          description: item.description,
-          url: item.url,
-          position: newPosition
-        }),
-      });
+      // 大カテゴリの参照アイテムの場合は別のAPIを使用
+      if (currentViewState.isMainCategoryView && item.isReference && item.referenceId) {
+        const response = await fetch(`/api/rankings/main-category/${item.referenceId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            position: newPosition
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to update position');
+        if (!response.ok) {
+          throw new Error('Failed to update reference position');
+        }
+      } else {
+        // 通常のアイテムの場合
+        const response = await fetch(`/api/rankings/${item.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: item.title,
+            description: item.description,
+            url: item.url,
+            position: newPosition
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update position');
+        }
       }
 
-      // ランキングデータの楽観的更新
-      const currentKey = currentViewState.isMainCategoryView 
-        ? `main_${currentViewState.selectedMainCategoryId}` 
-        : currentViewState.selectedCategory;
+      // 更新後のデータを再取得
+      console.log('[handlePositionChange] Fetching updated data...', {
+        isMainCategoryView: currentViewState.isMainCategoryView,
+        selectedMainCategoryId: currentViewState.selectedMainCategoryId,
+        selectedSubCategoryId: currentViewState.selectedSubCategoryId,
+        selectedCategory: currentViewState.selectedCategory
+      });
       
-      state.setRankingsWithTimestamp(prev => {
-        const currentRankings = prev[currentKey] || {};
-        const updatedRankings = { ...currentRankings };
-        
-        // 古い位置からアイテムを削除
-        delete updatedRankings[oldPosition];
-        
-        // 新しい位置にアイテムを配置
-        updatedRankings[newPosition] = {
-          ...item,
-          position: newPosition
-        };
-        
-        return {
-          ...prev,
-          [currentKey]: updatedRankings
-        };
-      }, currentKey);
+      if (currentViewState.isMainCategoryView && currentViewState.selectedMainCategoryId) {
+        console.log('[handlePositionChange] Fetching main category rankings...');
+        await api.fetchMainCategoryRankings(currentViewState.selectedMainCategoryId);
+      } else if (!currentViewState.isMainCategoryView && currentViewState.selectedSubCategoryId && currentViewState.selectedCategory) {
+        console.log('[handlePositionChange] Fetching sub category rankings...');
+        await api.fetchSubCategoryRankings(currentViewState.selectedSubCategoryId, currentViewState.selectedCategory);
+      } else {
+        console.warn('[handlePositionChange] No category selected for fetching');
+      }
       
       // ハイライト表示
       state.setHighlightPosition(newPosition);
@@ -281,18 +292,32 @@ export default function UserRankingClient({
     }
   };
 
-  // 現在のランキングを取得（URLパラメータベース）
-  const getCurrentRankings = () => {
+  // 現在のランキングを取得（URLパラメータベース）- useMemoで最適化
+  const currentRankings = useMemo(() => {
     if (currentViewState.isMainCategoryView && currentViewState.selectedMainCategoryId) {
       const key = `main_${currentViewState.selectedMainCategoryId}`;
-      return state.rankings[key] || {};
+      const rankings = state.rankings[key] || {};
+      console.log('[UserRankingClient] Getting main category rankings:', key, rankings);
+      return rankings;
     } else if (!currentViewState.isMainCategoryView && currentViewState.selectedCategory) {
-      return state.rankings[currentViewState.selectedCategory] || {};
+      const rankings = state.rankings[currentViewState.selectedCategory] || {};
+      console.log('[UserRankingClient] Getting sub category rankings:', currentViewState.selectedCategory, rankings);
+      return rankings;
     }
     return {};
-  };
+  }, [
+    currentViewState.isMainCategoryView,
+    currentViewState.selectedMainCategoryId,
+    currentViewState.selectedCategory,
+    state.rankings
+  ]);
 
-  const currentRankings = getCurrentRankings();
+  console.log('[UserRankingClient] Current rankings (memo):', {
+    currentViewState,
+    rankingsKeys: Object.keys(state.rankings),
+    currentRankingsKeys: Object.keys(currentRankings),
+    currentRankings
+  });
   const currentTitle = currentViewState.isMainCategoryView ? currentViewState.selectedMainCategory : currentViewState.selectedCategory;
   
   // サーバーから渡されたカテゴリ数とアイテム数を使用
@@ -597,38 +622,12 @@ export default function UserRankingClient({
                 }
               }
 
-              // ランキングデータの楽観的更新
-              const currentKey = currentViewState.isMainCategoryView 
-                ? `main_${currentViewState.selectedMainCategoryId}` 
-                : currentViewState.selectedCategory;
-              
-              console.log('[UserRankingClient] Optimistic update - adding item to:', currentKey, 'position:', modals.targetPosition);
-              
-              state.setRankingsWithTimestamp(prev => {
-                const currentRankings = prev[currentKey] || {};
-                const updatedRankings = { ...currentRankings };
-                
-                // 新しいアイテムを追加（最新の画像データを使用）
-                console.log('Optimistic update - final images:', finalImages);
-                
-                updatedRankings[modals.targetPosition] = {
-                  id: newItem.id,
-                  title: newItem.title,
-                  description: newItem.description,
-                  url: newItem.url,
-                  images: finalImages,
-                  isPinned: newItem.isPinned || false,
-                  sourceSubCategoryName: newItem.sourceSubCategoryName,
-                  sourceSubCategoryId: newItem.sourceSubCategoryId,
-                  isReference: newItem.isReference,
-                  referenceId: newItem.referenceId,
-                };
-                
-                return {
-                  ...prev,
-                  [currentKey]: updatedRankings
-                };
-              }, currentKey);
+              // データを再取得（楽観的更新の代わりに）
+              if (currentViewState.isMainCategoryView && currentViewState.selectedMainCategoryId) {
+                await api.fetchMainCategoryRankings(currentViewState.selectedMainCategoryId);
+              } else if (!currentViewState.isMainCategoryView && currentViewState.selectedSubCategoryId && currentViewState.selectedCategory) {
+                await api.fetchSubCategoryRankings(currentViewState.selectedSubCategoryId, currentViewState.selectedCategory);
+              }
               
               // ハイライト表示
               state.setHighlightPosition(modals.targetPosition);
@@ -650,7 +649,7 @@ export default function UserRankingClient({
           onClose={modals.closeEditRankingItemModal}
           item={modals.selectedItemForEdit}
           totalItems={Object.keys(currentRankings).length}
-          onSave={async (id: string, title: string, description: string, url: string, imageUrls?: string[], position?: number) => {
+          onSave={async (id: string, title: string, description: string, url: string, imageUrls?: string[]) => {
             try {
               // API呼び出し
               const response = await fetch(`/api/rankings/${id}`, {
@@ -661,8 +660,7 @@ export default function UserRankingClient({
                 body: JSON.stringify({
                   title,
                   description,
-                  url,
-                  position
+                  url
                 }),
               });
 
@@ -711,8 +709,7 @@ export default function UserRankingClient({
                       title,
                       description,
                       url,
-                      images: updatedImages,
-                      ...(position && { position })
+                      images: updatedImages
                     };
                     break;
                   }

@@ -35,77 +35,111 @@ export async function PUT(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // 順位変更の場合、位置を入れ替える
-    if (position && position !== existingItem.position) {
-      const oldPosition = existingItem.position;
-      
-      if (existingItem.mainCategoryId) {
-        // 大カテゴリの場合: 直接作成アイテムと参照アイテムを両方考慮
-        const [directItems, references] = await Promise.all([
-          prisma.rankingItem.findMany({
-            where: { mainCategoryId: existingItem.mainCategoryId },
-          }),
-          prisma.mainCategoryItemReference.findMany({
-            where: { mainCategoryId: existingItem.mainCategoryId },
-          })
-        ]);
+    // 順位変更の場合、位置を入れ替える（トランザクション内で実行）
+    let updatedItem;
+    
+    if (position !== undefined && position !== existingItem.position) {
+      updatedItem = await prisma.$transaction(async (tx) => {
+        const oldPosition = existingItem.position;
+        
+        if (existingItem.mainCategoryId) {
+          // 大カテゴリの場合: 直接作成アイテムと参照アイテムを両方考慮
+          const [directItems, references] = await Promise.all([
+            tx.rankingItem.findMany({
+              where: { mainCategoryId: existingItem.mainCategoryId },
+            }),
+            tx.mainCategoryItemReference.findMany({
+              where: { mainCategoryId: existingItem.mainCategoryId },
+            })
+          ]);
 
-        // 新しい位置にアイテムがあるかチェック
-        const directItemAtNewPos = directItems.find(item => item.position === position && item.id !== id);
-        const refAtNewPos = references.find(ref => ref.position === position);
+          // 新しい位置にアイテムがあるかチェック
+          const directItemAtNewPos = directItems.find(item => item.position === position && item.id !== id);
+          const refAtNewPos = references.find(ref => ref.position === position);
 
-        if (directItemAtNewPos) {
-          // 直接作成されたアイテムと位置を入れ替える
-          await prisma.rankingItem.update({
-            where: { id: directItemAtNewPos.id },
-            data: { position: oldPosition }
+          // 位置の交換
+          if (directItemAtNewPos) {
+            // 直接作成されたアイテムと位置を入れ替える
+            await tx.rankingItem.update({
+              where: { id: directItemAtNewPos.id },
+              data: { position: oldPosition }
+            });
+          } else if (refAtNewPos) {
+            // 参照アイテムと位置を入れ替える
+            await tx.mainCategoryItemReference.update({
+              where: { id: refAtNewPos.id },
+              data: { position: oldPosition }
+            });
+          }
+        } else if (existingItem.subCategoryId) {
+          // 小カテゴリの場合: 従来の処理
+          const categoryItems = await tx.rankingItem.findMany({
+            where: { subCategoryId: existingItem.subCategoryId },
+            orderBy: { position: 'asc' }
           });
-        } else if (refAtNewPos) {
-          // 参照アイテムと位置を入れ替える
-          await prisma.mainCategoryItemReference.update({
-            where: { id: refAtNewPos.id },
-            data: { position: oldPosition }
-          });
+
+          const itemAtNewPosition = categoryItems.find(item => item.position === position && item.id !== id);
+          if (itemAtNewPosition) {
+            await tx.rankingItem.update({
+              where: { id: itemAtNewPosition.id },
+              data: { position: oldPosition }
+            });
+          }
         }
-      } else {
-        // 小カテゴリの場合: 従来の処理
-        const categoryItems = await prisma.rankingItem.findMany({
-          where: { subCategoryId: existingItem.subCategoryId },
-          orderBy: { position: 'asc' }
+
+        // 移動元のアイテムを新しい位置に更新（トランザクション内で実行）
+        return await tx.rankingItem.update({
+          where: { id },
+          data: {
+            title,
+            description: description || null,
+            url: url || null,
+            position: position,
+            isPinned: isPinned !== undefined ? isPinned : undefined,
+          },
+          include: {
+            user: {
+              select: { name: true, username: true },
+            },
+            subCategory: {
+              select: { name: true },
+            },
+            mainCategory: {
+              select: { name: true },
+            },
+            images: {
+              orderBy: { order: "asc" },
+            },
+          },
         });
-
-        const itemAtNewPosition = categoryItems.find(item => item.position === position && item.id !== id);
-        if (itemAtNewPosition) {
-          await prisma.rankingItem.update({
-            where: { id: itemAtNewPosition.id },
-            data: { position: oldPosition }
-          });
-        }
-      }
+      });
+    } else {
+      // 位置変更がない場合は通常の更新
+      updatedItem = await prisma.rankingItem.update({
+        where: { id },
+        data: {
+          title,
+          description: description || null,
+          url: url || null,
+          position: position !== undefined ? position : undefined,
+          isPinned: isPinned !== undefined ? isPinned : undefined,
+        },
+        include: {
+          user: {
+            select: { name: true, username: true },
+          },
+          subCategory: {
+            select: { name: true },
+          },
+          mainCategory: {
+            select: { name: true },
+          },
+          images: {
+            orderBy: { order: "asc" },
+          },
+        },
+      });
     }
-
-    // アイテムを更新
-    const updatedItem = await prisma.rankingItem.update({
-      where: { id },
-      data: {
-        title,
-        description: description || null,
-        url: url || null,
-        position: position || null,
-        isPinned: isPinned !== undefined ? isPinned : undefined,
-      },
-      include: {
-        user: {
-          select: { name: true, username: true },
-        },
-        subCategory: {
-          select: { name: true },
-        },
-        mainCategory: {
-          select: { name: true },
-        },
-      },
-    });
 
     return NextResponse.json(updatedItem);
   } catch (error) {

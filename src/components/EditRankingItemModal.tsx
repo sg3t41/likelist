@@ -14,7 +14,7 @@ interface EditRankingItemModalProps {
     position?: number;
   } | null;
   totalItems: number;
-  onSave: (id: string, title: string, description: string, url: string, imageUrls?: string[], position?: number) => Promise<void>;
+  onSave: (id: string, title: string, description: string, url: string, imageUrls?: string[]) => Promise<void>;
 }
 
 export default function EditRankingItemModal({ 

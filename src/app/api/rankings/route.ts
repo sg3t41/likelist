@@ -222,30 +222,76 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // ランキングアイテムを作成
-      const rankingItem = await prisma.rankingItem.create({
-        data: {
-          title,
-          description,
-          url,
-          position: position || null,
-          subCategoryId: subCategoryId || null,
-          mainCategoryId: mainCategoryId || null,
-          userId,
-        },
-        include: {
-          user: {
-            select: { name: true, username: true },
-          },
-          subCategory: {
-            select: { name: true },
-          },
-          mainCategory: {
-            select: { name: true },
-          },
-        },
-      });
+      // ランキングアイテムを作成（位置の入れ替えを考慮）
+      const rankingItem = await prisma.$transaction(async (tx) => {
+        // 指定された位置に既存のアイテムがある場合は入れ替え
+        if (position) {
+          if (mainCategoryId) {
+            // 大カテゴリの場合
+            const [directItems, references] = await Promise.all([
+              tx.rankingItem.findMany({
+                where: { mainCategoryId, position },
+              }),
+              tx.mainCategoryItemReference.findMany({
+                where: { mainCategoryId, position },
+              })
+            ]);
 
+            // 既存アイテムのpositionをnullに設定
+            if (directItems.length > 0) {
+              await tx.rankingItem.updateMany({
+                where: { mainCategoryId, position },
+                data: { position: null }
+              });
+            }
+            if (references.length > 0) {
+              await tx.mainCategoryItemReference.updateMany({
+                where: { mainCategoryId, position },
+                data: { position: null }
+              });
+            }
+          } else if (subCategoryId) {
+            // 小カテゴリの場合
+            const existingItems = await tx.rankingItem.findMany({
+              where: { subCategoryId, position },
+            });
+
+            if (existingItems.length > 0) {
+              await tx.rankingItem.updateMany({
+                where: { subCategoryId, position },
+                data: { position: null }
+              });
+            }
+          }
+        }
+
+        // 新しいアイテムを作成
+        return await tx.rankingItem.create({
+          data: {
+            title,
+            description,
+            url,
+            position: position || null,
+            subCategoryId: subCategoryId || null,
+            mainCategoryId: mainCategoryId || null,
+            userId,
+          },
+          include: {
+            user: {
+              select: { name: true, username: true },
+            },
+            subCategory: {
+              select: { name: true },
+            },
+            mainCategory: {
+              select: { name: true },
+            },
+            images: {
+              orderBy: { order: "asc" },
+            },
+          },
+        });
+      });
 
       return NextResponse.json(rankingItem);
     }
